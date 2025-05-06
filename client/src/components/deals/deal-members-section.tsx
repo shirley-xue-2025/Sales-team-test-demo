@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Role } from '@/lib/types';
-import { Plus, User, Info } from 'lucide-react';
+import { Plus, User, Info, Check } from 'lucide-react';
 
 interface DealMember {
   id: number;
@@ -30,16 +30,32 @@ export default function DealMembersSection({
     { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com' },
   ];
 
+  // Default closer role ID
+  const closerRoleId = availableRoles.find(r => r.title === "Closer")?.id || 1;
+  const setterRoleId = availableRoles.find(r => r.title === "Setter")?.id || 2;
+  const seniorCloserRoleId = availableRoles.find(r => r.title === "Senior Closer")?.id || 3;
+  
   // State for tracking role assignments
   const [dealMembers, setDealMembers] = useState<DealMember[]>(initialMembers.length ? initialMembers : [
     // Default to showing myself as a Closer
     { 
-      id: 999, // Special ID for current user
+      id: 1411, // Current user ID (Muhammad Gunes)
       name: "Muhammad Gunes", 
       email: "muhammad.gunes@example.com",
-      roleId: availableRoles.find(r => r.title === "Closer")?.id || availableRoles[0]?.id || 0 
+      roleId: closerRoleId
     }
   ]);
+  
+  // Initialize with default values if available roles change
+  useEffect(() => {
+    if (availableRoles.length > 0 && dealMembers.length === 1 && dealMembers[0].id === 1411) {
+      const updatedMember = {
+        ...dealMembers[0],
+        roleId: closerRoleId
+      };
+      setDealMembers([updatedMember]);
+    }
+  }, [availableRoles]);
 
   // Add a new role assignment
   const addRoleAssignment = () => {

@@ -3,6 +3,9 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import DealMembersSection from '@/components/deals/deal-members-section';
+import { Role } from '@/lib/types';
+import { useQuery } from '@tanstack/react-query';
 
 interface DealDetailsProps {
   params: {
@@ -12,6 +15,12 @@ interface DealDetailsProps {
 
 export default function SalesMemberDealDetails({ params }: DealDetailsProps) {
   const dealId = params.id;
+  
+  // Fetch roles
+  const { data: roles = [] } = useQuery<Role[]>({
+    queryKey: ['/api/roles'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
   
   // Mock data for the deal
   const deal = {
@@ -71,18 +80,15 @@ export default function SalesMemberDealDetails({ params }: DealDetailsProps) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-        {/* Sales Member Section */}
+        {/* Team Members & Roles Section */}
         <div className="border-b border-gray-200 p-6">
-          <h2 className="text-sm font-medium text-gray-500 mb-4">Sales Member</h2>
-          <div className="flex items-center">
-            <div className="h-12 w-12 bg-gray-100 rounded-full mr-4 flex items-center justify-center">
-              {deal.salesMember.name.charAt(0)}
-            </div>
-            <div>
-              <div className="font-medium">{deal.salesMember.name}</div>
-              <div className="text-sm text-gray-500">{deal.salesMember.email}</div>
-            </div>
-          </div>
+          <h2 className="text-sm font-medium text-gray-500 mb-4">Team Members</h2>
+          <DealMembersSection 
+            availableRoles={roles}
+            onMembersChange={(members) => {
+              console.log('Members updated:', members);
+            }}
+          />
         </div>
 
         {/* Product Section */}
