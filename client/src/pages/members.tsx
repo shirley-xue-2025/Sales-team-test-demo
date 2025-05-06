@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Role } from '@/lib/types';
+import { RoleInsert } from '@shared/schema';
 import { Settings, MoreVertical } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -54,14 +55,28 @@ export default function MembersPage() {
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Members (MEB)</h1>
+        <h1 className="text-2xl font-bold">
+          {activeTab === 'roles' ? 'Sales Roles' : 'Members (MEB)'}
+        </h1>
         <div className="flex space-x-2">
-          <Button 
-            onClick={() => setInviteModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Invite members
-          </Button>
+          {activeTab === 'roles' ? (
+            <Button 
+              className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create role
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => setInviteModalOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Invite members
+            </Button>
+          )}
         </div>
       </div>
 
@@ -195,33 +210,45 @@ export default function MembersPage() {
         </TabsContent>
 
         {/* Sales Roles Tab */}
-        <TabsContent value="roles" className="border rounded-sm">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b text-left text-sm font-medium text-gray-500">
-                <th className="px-4 py-3">ROLE</th>
-                <th className="px-4 py-3">DESCRIPTION</th>
-                <th className="px-4 py-3">MEMBERS</th>
-                <th className="px-4 py-3 text-right w-32">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {roles.map((role) => (
-                <tr key={role.id} className="border-b">
-                  <td className="px-4 py-3 font-medium">{role.title}</td>
-                  <td className="px-4 py-3 text-sm">{role.description}</td>
-                  <td className="px-4 py-3 text-sm">
-                    {members.filter(m => m.roleId === role.id).length}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Settings size={16} />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <TabsContent value="roles" className="border-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+            {roles.map((role) => (
+              <div key={role.id} className="bg-white border border-gray-200 rounded-sm shadow-sm">
+                <div className="flex justify-between items-start p-5">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-base font-medium text-gray-900">{role.title}</h3>
+                      {role.isDefault && (
+                        <span className="px-2 py-0.5 text-xs rounded-sm bg-gray-100 text-gray-600">Default</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600">{role.description}</p>
+                  </div>
+                  <button className="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="1"></circle>
+                      <circle cx="19" cy="12" r="1"></circle>
+                      <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                  </button>
+                </div>
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    {members.filter(m => m.roleId === role.id).length} members
+                  </div>
+                  <button className="text-xs px-3 py-1 bg-white border border-gray-300 rounded-sm text-gray-600 hover:bg-gray-50">
+                    Configure
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
 
