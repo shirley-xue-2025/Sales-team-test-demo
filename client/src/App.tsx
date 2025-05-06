@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import Sidebar from "@/components/layout/sidebar";
+import { AccountSwitcher } from "@/components/account-switcher";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Roles from "@/pages/roles";
@@ -64,6 +65,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router />
+      <AccountSwitcher />
       <Toaster />
       <SonnerToaster />
     </QueryClientProvider>

@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Role } from '@/lib/types';
 import { RoleInsert } from '@shared/schema';
 import { Settings, MoreVertical } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import RoleForm from '@/components/sales/role-form';
+import { showToast } from '@/components/ui/sonner';
 
 interface Member {
   id: number;
@@ -22,11 +24,38 @@ export default function MembersPage() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+  const [roleFormOpen, setRoleFormOpen] = useState(false);
+  // We're using Role from lib/types but RoleForm expects Role from shared/schema
+  // This is a temporary solution for the type compatibility
+  const [selectedRole, setSelectedRole] = useState<any>(undefined);
+  
+  const queryClient = useQueryClient();
 
   // Fetch roles
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ['/api/roles'],
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+  
+  // Mutations
+  const createRoleMutation = useMutation({
+    mutationFn: async (role: RoleInsert) => {
+      const res = await apiRequest('POST', '/api/roles', role);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      showToast('Role created successfully', {
+        description: 'The new role has been added to the system.',
+        position: 'top-center',
+      });
+    },
+    onError: (error) => {
+      showToast('Failed to create role', {
+        description: error.message || 'An error occurred while creating the role.',
+        position: 'top-center',
+      });
+    },
   });
 
   // Mock members data
@@ -51,6 +80,16 @@ export default function MembersPage() {
     setInviteEmail('');
     setSelectedRoleId('');
   };
+  
+  const handleAddRole = () => {
+    setSelectedRole(undefined);
+    setRoleFormOpen(true);
+  };
+  
+  const handleFormSubmit = (data: RoleInsert) => {
+    createRoleMutation.mutate(data);
+    setRoleFormOpen(false);
+  };
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -61,6 +100,7 @@ export default function MembersPage() {
         <div className="flex space-x-2">
           {activeTab === 'roles' ? (
             <Button 
+              onClick={handleAddRole}
               className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -318,6 +358,14 @@ export default function MembersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Role Form Modal */}
+      <RoleForm
+        open={roleFormOpen}
+        onOpenChange={setRoleFormOpen}
+        initialData={selectedRole}
+        onSubmit={handleFormSubmit}
+      />
     </div>
   );
 }
