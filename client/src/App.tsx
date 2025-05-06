@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Roles from "@/pages/roles";
 import IncentivePlan from "@/pages/incentive-plan";
+import DealDetails from "@/pages/deal-details";
 
 function Router() {
   return (
@@ -19,6 +20,9 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/roles" component={Roles} />
             <Route path="/incentive-plan" component={IncentivePlan} />
+            <Route path="/deals/:id">
+              {params => <DealDetails params={params} />}
+            </Route>
             <Route component={NotFound} />
           </Switch>
         </main>

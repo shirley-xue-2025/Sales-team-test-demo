@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { X } from 'lucide-react';
 import { Product } from '@/lib/types';
 
 interface ProductSelectionModalProps {
@@ -93,42 +94,65 @@ export default function ProductSelectionModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select products</DialogTitle>
-            <DialogDescription>
-              Choose which products to include in the incentive plan. Products removed from the incentive plan will no longer be available for new deals.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="max-h-[400px] overflow-y-auto py-4">
-            <div className="space-y-4">
-              {products.map((product) => (
-                <div key={product.id} className="flex items-center space-x-3 px-1 py-1 hover:bg-gray-50 rounded-sm">
-                  <Checkbox 
-                    id={`product-${product.id}`}
-                    checked={localSelectedIds.includes(product.id)} 
-                    onCheckedChange={(checked) => handleCheckboxChange(product.id, !!checked)}
-                  />
-                  <label htmlFor={`product-${product.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1">
-                    {product.name}
-                  </label>
-                  <div className="text-sm text-gray-500">
-                    {product.commission} / {product.bonus}
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <div className="p-5">
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-lg font-semibold">Select products</h2>
+              <button 
+                onClick={() => onOpenChange(false)} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Choose which products to include in the incentive plan.
+              Products removed from the incentive plan will no longer be
+              available for new deals.
+            </p>
+            
+            <div className="max-h-[400px] overflow-y-auto">
+              <div className="space-y-5">
+                {products.map((product) => (
+                  <div key={product.id} className="flex items-center">
+                    <div className="mr-3">
+                      <Checkbox
+                        id={`product-${product.id}`}
+                        checked={localSelectedIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleCheckboxChange(product.id, !!checked)}
+                        className="border-green-600 text-green-600 focus:ring-green-500"
+                      />
+                    </div>
+                    <label 
+                      htmlFor={`product-${product.id}`} 
+                      className="flex-1 text-sm font-medium cursor-pointer"
+                    >
+                      {product.name}
+                    </label>
+                    <div className="text-sm text-gray-600 font-medium ml-auto">
+                      {product.commission} / {product.bonus}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
           
-          <DialogFooter className="sm:justify-between">
-            <Button variant="outline" onClick={handleCancel}>
+          <div className="flex justify-between p-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={handleCancel}
+              className="rounded-sm"
+            >
               Cancel
             </Button>
-            <Button onClick={handleSave}>
+            <Button 
+              onClick={handleSave}
+              className="bg-green-600 hover:bg-green-700 text-white rounded-sm"
+            >
               Save changes
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
