@@ -11,6 +11,12 @@ import IncentivePlan from "@/pages/incentive-plan";
 import DealDetails from "@/pages/deal-details";
 import Members from "@/pages/members";
 
+// Sales Member pages
+import SalesMemberProducts from "@/pages/sales-member/products";
+import SalesMemberDeals from "@/pages/sales-member/deals";
+import SalesMemberDealDetails from "@/pages/sales-member/deal-details";
+import SalesMemberInvitations from "@/pages/sales-member/invitations";
+
 function Router() {
   return (
     <div className="flex min-h-screen">
@@ -25,6 +31,15 @@ function Router() {
             <Route path="/deals/:id">
               {params => <DealDetails params={params} />}
             </Route>
+            
+            {/* Sales Member Routes */}
+            <Route path="/sales-member/products" component={SalesMemberProducts} />
+            <Route path="/sales-member/deals" component={SalesMemberDeals} />
+            <Route path="/sales-member/deals/:id">
+              {params => <SalesMemberDealDetails params={params} />}
+            </Route>
+            <Route path="/sales-member/invitations" component={SalesMemberInvitations} />
+            
             <Route component={NotFound} />
           </Switch>
         </main>
