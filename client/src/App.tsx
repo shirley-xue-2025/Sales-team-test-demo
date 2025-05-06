@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import Roles from "@/pages/roles";
 import IncentivePlan from "@/pages/incentive-plan";
 import DealDetails from "@/pages/deal-details";
+import Members from "@/pages/members";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/roles" component={Roles} />
             <Route path="/incentive-plan" component={IncentivePlan} />
+            <Route path="/members" component={Members} />
             <Route path="/deals/:id">
               {params => <DealDetails params={params} />}
             </Route>
