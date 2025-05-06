@@ -20,6 +20,7 @@ const IncentivePlanPage: React.FC = () => {
     setRoles,
     selectedRoles,
     toggleRoleSelection,
+    toggleProductSelection,
     calculateCombinedIncentives
   } = useIncentiveStore();
   
