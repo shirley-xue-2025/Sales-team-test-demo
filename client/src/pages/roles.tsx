@@ -170,91 +170,100 @@ const RolesPage: React.FC = () => {
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Sales Team Roles</h1>
-        <Button onClick={handleAddRole}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add New Role
-        </Button>
+        <h1 className="text-lg font-medium text-gray-900 mb-4 md:mb-0">Members (MEB)</h1>
+        <div className="flex space-x-3">
+          <Button variant="outline" className="text-sm h-9 px-4 py-2 rounded-md border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+            Service Hub
+          </Button>
+          <Button variant="outline" className="text-sm h-9 px-4 py-2 rounded-md border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+            Provider account
+          </Button>
+        </div>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6 border-b w-full bg-transparent p-0 h-auto">
-          <TabsTrigger 
-            value="roles"
-            className={`tab-button ${activeTab === 'roles' ? 'active' : 'inactive'}`}
-          >
-            Roles Management
-          </TabsTrigger>
-          <TabsTrigger 
-            value="team"
-            className={`tab-button ml-8 ${activeTab === 'team' ? 'active' : 'inactive'}`}
-          >
-            Team Assignment
-          </TabsTrigger>
-          <TabsTrigger 
-            value="permissions"
-            className={`tab-button ml-8 ${activeTab === 'permissions' ? 'active' : 'inactive'}`}
-          >
-            Permission Settings
-          </TabsTrigger>
-        </TabsList>
+      {/* Warning banner - can be toggled */}
+      <div className="mb-6 bg-red-50 border border-red-200 rounded-sm p-4 flex justify-between items-center">
+        <div className="flex items-center space-x-2 text-sm text-red-600">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>You've reached your current member limit. Upgrade your plan now and let your team continue to grow.</span>
+        </div>
+        <div className="flex space-x-3">
+          <Button size="sm" className="text-xs h-7 rounded-sm bg-white text-red-600 border border-red-300 hover:bg-red-50">
+            Upgrade
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs h-7 text-red-600 hover:bg-red-100">
+            Hide
+          </Button>
+        </div>
+      </div>
+      
+      <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            <button className="px-6 py-3 text-sm font-medium border-b-2 border-green-500 text-gray-900">
+              Active members
+            </button>
+            <button className="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              Invitations
+            </button>
+          </div>
+        </div>
         
-        <TabsContent value="roles" className="pt-4">
+        <div className="p-0">
           {rolesQuery.isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-4">
               {renderSkeletons()}
             </div>
           ) : rolesQuery.data?.length === 0 ? (
-            renderEmptyState()
+            <div className="p-4">
+              {renderEmptyState()}
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div className="col-span-1">ID</div>
+                <div className="col-span-4">Name</div>
+                <div className="col-span-5">E-Mail</div>
+                <div className="col-span-2 text-right">Actions</div>
+              </div>
+              
               {rolesQuery.data?.map((role) => (
-                <RoleCard 
-                  key={role.id} 
-                  role={role} 
-                  onEdit={handleEditRole} 
-                  onDelete={handleDeleteRole} 
-                />
+                <div key={role.id} className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-gray-200 text-sm text-gray-800">
+                  <div className="col-span-1">{role.id}</div>
+                  <div className="col-span-4 font-medium">{role.title}</div>
+                  <div className="col-span-5">{role.description.substring(0, 30) + (role.description.length > 30 ? '...' : '')}</div>
+                  <div className="col-span-2 text-right">
+                    <button 
+                      onClick={() => handleDeleteRole(role.id)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               ))}
+              
+              <div className="flex justify-end p-4">
+                <Button onClick={handleAddRole} variant="outline" className="flex items-center border-dashed text-gray-600 hover:text-gray-800 rounded-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Invite members
+                </Button>
+              </div>
             </div>
           )}
-        </TabsContent>
-        
-        <TabsContent value="team" className="pt-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-center py-8">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Team Assignment</h3>
-              <p className="text-gray-600 mb-4">This feature will be implemented soon.</p>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="permissions" className="pt-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-center py-8">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Permission Settings</h3>
-              <p className="text-gray-600 mb-4">This feature will be implemented soon.</p>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
       
       {/* Role form dialog */}
       <RoleForm 
