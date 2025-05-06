@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Role, Product, CombinedIncentive } from '@/lib/types';
+import ProductSelectionModal from './product-selection-modal';
 
 interface RoleComparisonProps {
   roles: Role[];
@@ -12,6 +13,7 @@ interface RoleComparisonProps {
   onRoleSelectionChange: (roleId: number) => void;
   isEditMode?: boolean;
   onEditClick?: () => void;
+  onProductSelectionChange?: (productIds: string[]) => void;
 }
 
 const RoleComparison: React.FC<RoleComparisonProps> = ({
@@ -21,11 +23,19 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   combinedIncentives,
   onRoleSelectionChange,
   isEditMode = false,
-  onEditClick
+  onEditClick,
+  onProductSelectionChange
 }) => {
   // Get all products that are part of combined incentives
   const relevantProductIds = combinedIncentives.map(ci => ci.productId);
   const relevantProducts = products.filter(p => relevantProductIds.includes(p.id) || selectedRoles.length === 0);
+  
+  // State for product selection modal
+  const [isProductSelectionOpen, setIsProductSelectionOpen] = useState(false);
+  // State to track newly added products for highlighting and focusing
+  const [newlyAddedProductIds, setNewlyAddedProductIds] = useState<string[]>([]);
+  // Ref for the first input field of newly added products
+  const firstNewInputRef = useRef<HTMLInputElement | null>(null);
   
   // State for edited values
   const [editedValues, setEditedValues] = useState<Record<string, Record<string, { commission: string; bonus: string }>>>({});
@@ -82,6 +92,25 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
     };
   };
   
+  // Effect to focus on the first input of newly added products when in edit mode
+  useEffect(() => {
+    if (isEditMode && newlyAddedProductIds.length > 0 && firstNewInputRef.current) {
+      firstNewInputRef.current.focus();
+    }
+  }, [isEditMode, newlyAddedProductIds]);
+  
+  // Handle product selection
+  const handleProductSelection = (selectedProductIds: string[]) => {
+    if (onProductSelectionChange) {
+      // Identify newly added products
+      const newlyAdded = selectedProductIds.filter(id => !relevantProductIds.includes(id));
+      setNewlyAddedProductIds(newlyAdded);
+      
+      // Notify parent component about the selection
+      onProductSelectionChange(selectedProductIds);
+    }
+  };
+  
   // Get display value for a cell
   const getCellValue = (product: Product, roleId: number, type: 'commission' | 'bonus') => {
     const productKey = product.id;
@@ -98,29 +127,44 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-lg font-medium text-gray-800">Team incentive overview</h2>
-        <Button 
-          onClick={onEditClick}
-          className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
-        >
-          {isEditMode ? (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              Save changes
-            </>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-              Edit incentives
-            </>
-          )}
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => setIsProductSelectionOpen(true)}
+            variant="outline"
+            className="rounded-sm border-gray-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+            </svg>
+            Change products
+          </Button>
+          
+          <Button 
+            onClick={onEditClick}
+            className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
+          >
+            {isEditMode ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save changes
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit incentives
+              </>
+            )}
+          </Button>
+        </div>
       </div>
       
       <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -172,16 +216,18 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
         </thead>
         
         <tbody className="divide-y divide-gray-200 bg-white">
-          {relevantProducts.map(product => {
+          {relevantProducts.map((product, productIndex) => {
             const totals = calculateTotals(product);
+            const isNewlyAdded = newlyAddedProductIds.includes(product.id);
             
             return (
-              <tr key={product.id} className="hover:bg-gray-50">
+              <tr key={product.id} className={`hover:bg-gray-50 ${isNewlyAdded ? 'bg-green-50/20' : ''}`}>
                 <td className="px-4 py-3 text-sm font-medium text-gray-800">
                   {product.name}
+                  {isNewlyAdded && <span className="ml-2 text-xs text-green-600">(New)</span>}
                 </td>
                 
-                {selectedRoles.map(roleId => (
+                {selectedRoles.map((roleId, roleIndex) => (
                   <React.Fragment key={`values-${roleId}-${product.id}`}>
                     <td className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
@@ -190,6 +236,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                           className="h-8 text-center"
                           value={getCellValue(product, roleId, 'commission')}
                           onChange={(e) => handleEditChange(product.id, roleId, 'commission', e.target.value)}
+                          ref={isNewlyAdded && productIndex === 0 && roleIndex === 0 ? firstNewInputRef : undefined}
                         />
                       ) : (
                         getCellValue(product, roleId, 'commission')
@@ -231,6 +278,15 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           )}
         </tbody>
       </table>
+      
+      {/* Product Selection Modal */}
+      <ProductSelectionModal
+        open={isProductSelectionOpen}
+        onOpenChange={setIsProductSelectionOpen}
+        products={products}
+        selectedProductIds={relevantProductIds}
+        onSelectProducts={handleProductSelection}
+      />
     </div>
   );
 };

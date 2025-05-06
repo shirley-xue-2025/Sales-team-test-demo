@@ -64,6 +64,37 @@ const IncentivePlanPage: React.FC = () => {
     setIsEditMode(!isEditMode);
   };
   
+  // Handle product selection changes
+  const handleProductSelectionChange = (productIds: string[]) => {
+    // For this demo, we're simulating the effect by toggling each product's selection
+    // In a real app, this would update a database or store
+    
+    // First, identify which products were added or removed
+    const currentSelectedIds = products.filter(p => p.selected).map(p => p.id);
+    const added = productIds.filter(id => !currentSelectedIds.includes(id));
+    const removed = currentSelectedIds.filter(id => !productIds.includes(id));
+    
+    // Update product selections
+    added.forEach(id => {
+      // For a newly added product, find the first role to assign to
+      if (selectedRoles.length > 0) {
+        toggleProductSelection(id, selectedRoles[0], true);
+      }
+    });
+    
+    removed.forEach(id => {
+      // For a removed product, remove from all roles
+      selectedRoles.forEach(roleId => {
+        toggleProductSelection(id, roleId, false);
+      });
+    });
+    
+    // If we added new products, switch to edit mode to allow setting values
+    if (added.length > 0 && !isEditMode) {
+      setIsEditMode(true);
+    }
+  };
+  
   return (
     <div className="container mx-auto py-6 px-4 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
@@ -104,6 +135,7 @@ const IncentivePlanPage: React.FC = () => {
         onRoleSelectionChange={toggleRoleSelection}
         isEditMode={isEditMode}
         onEditClick={handleEditClick}
+        onProductSelectionChange={handleProductSelectionChange}
       />
     </div>
   );
