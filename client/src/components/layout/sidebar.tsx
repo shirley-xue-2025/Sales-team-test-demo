@@ -124,9 +124,9 @@ const Sidebar: React.FC = () => {
                     Deals
                   </a>
                 </Link>
-                <Link href="/commission-plan">
-                  <a className={`block px-3 py-1 text-sm text-gray-400 hover:text-white ${location === '/commission-plan' ? 'text-white' : ''}`}>
-                    Commission plan
+                <Link href="/incentive-plan">
+                  <a className={`block px-3 py-1 text-sm text-gray-400 hover:text-white ${location === '/incentive-plan' ? 'text-white' : ''}`}>
+                    Incentive plan
                   </a>
                 </Link>
                 <Link href="/roles">

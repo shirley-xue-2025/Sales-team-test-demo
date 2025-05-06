@@ -23,19 +23,19 @@ const RolesPage: React.FC = () => {
     { id: 416, name: "Fernando Ferreira", email: "fernando.ferreira@example.com" }
   ];
   
-  // Mock sales roles data as shown in the screenshot
+  // Mock sales roles data as shown in the screenshot with updated names
   const salesRoles = [
     { 
       id: 1, 
-      title: "Closer", 
-      description: "Responsible for finalizing deals and converting prospects into clients", 
+      title: "Setter", 
+      description: "Qualifies leads and schedules appointments for closers", 
       isDefault: true,
       memberCount: 3 
     },
     { 
       id: 2, 
-      title: "Setter", 
-      description: "Qualifies leads and schedules appointments for closers", 
+      title: "Junior Closer", 
+      description: "Responsible for converting qualified prospects into clients", 
       isDefault: false,
       memberCount: 0
     },

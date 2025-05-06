@@ -1,0 +1,100 @@
+Enhanced Incentive Plan System Implementation
+1. Updated Role Names and Mock Data
+Replace existing role names with real use case names:
+"Sales Manager" → "Setter"
+"Sales Representative" → "Junior Closer"
+"Junior Sales" → "Senior Closer"
+Update all role descriptions to match the new role types
+Update references across all components and pages
+2. Separate Viewing and Editing Experiences
+Implement product selection functionality:
+Add selected: boolean property to Product interface
+Create mechanisms to select/deselect products for each role
+Store selected products separately from all available products
+In edit mode: show all products (20)
+In view mode: show only selected products (10, 11, etc.)
+Update store interface to track selected products per role
+3. Realistic Product Names for Online Business Coaching
+Replace generic product names with coaching-relevant names:
+"1-on-1 Strategy Session"
+"Business Growth Masterclass"
+"Leadership Coaching Program"
+"Sales Acceleration Workshop"
+"Marketing Mindset Course"
+"CEO Mentoring Package"
+"Social Media Authority Program"
+"Email Marketing Mastery"
+"Client Acquisition System"
+"Business Scaling Blueprint"
+etc.
+4. Rename "Global Plan" to "Default Template"
+Update all UI labels and references to use "Default Template" instead of "Global Plan"
+Make the template purpose clearer in the UI with better descriptions
+Update store logic to reflect this conceptual change
+5. Adaptive Interface Based on Role Count
+Add role count detection mechanism in IncentivePlanPage
+For single-role scenarios:
+Simplify by removing tabs
+Present direct incentive configuration
+Remove "role-specific" terminology
+For multi-role scenarios:
+Maintain tab structure with improved framing
+6. Role Comparison View Implementation
+Create new "Role Combination" tab alongside "Default Template" and role-specific tabs
+Develop matrix view with multi-role selection checkboxes:
+Allow selecting combinations of roles (Setter + Junior Closer, etc.)
+Display product rows with selected role columns
+Show commission/bonus values in cells
+Add dynamic "Total" column showing combined commission/bonus
+Implement visual indicators:
+Color coding for commission differences
+Highlighting for significant variations between roles
+Clear visualization of combined team commission structures
+Add sorting/filtering capabilities:
+Sort by highest/lowest commission
+Filter by selected products only
+7. Enhanced Store Implementation
+Update incentiveStore to support:
+Tracking selected products for each role
+Calculating combined incentives for role combinations
+Supporting the view/edit mode separation
+Storing the default template instead of global plan
+Add helper functions:
+getSelectedProductsForRole(roleId)
+calculateCombinedIncentives(roleIds)
+toggleProductSelection(roleId, productId, selected)
+8. Improved User Experience
+Add clear visual distinction between edit and view modes
+Implement tooltips explaining the Default Template concept
+Add sorting and filtering capabilities to all product tables
+Provide clean navigation between roles and incentive configuration pages
+Add visualization of commission breakdowns in the comparison view
+Based on my analysis of the current codebase, here's how we would implement these changes:
+
+1. Updating Role Names and Product Names
+First, we'll update the role names throughout the system to reflect the real use cases (Setter, Junior Closer, Senior Closer) and replace the generic product names with coaching-relevant ones. This will involve modifying the mock data in several files.
+
+2. Separating View and Edit Modes
+The current implementation doesn't have a clear separation between viewing and editing products. We'll need to:
+
+Add a selected property to the Product interface
+Modify the store to track which products are selected for each role
+Update UI components to show all products in edit mode, but only selected products in view mode
+Add UI controls to toggle product selection
+3. Role Comparison View
+The most significant addition will be the new Role Comparison View that allows you to:
+
+Select combinations of roles (Setter + Junior Closer, etc.)
+See the total commission and bonus for these combinations
+Quickly toggle between different combinations
+Visually identify differences between roles
+This will require creating a new tab in the IncentivePlanPage with a matrix-style view showing products as rows and selected roles as columns, with dynamic totals that update as you select/deselect roles.
+
+4. Store Enhancements
+The incentiveStore will need significant updates to support:
+
+Tracking selected products separately from all available products
+Calculating combined incentives for multiple roles
+Supporting the "Default Template" concept instead of "Global Plan"
+5. Adaptive Interface
+We'll implement logic to detect when there's only one role in the system and adapt the UI accordingly, removing unnecessary complexity when it's not needed.

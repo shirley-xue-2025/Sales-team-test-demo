@@ -7,6 +7,7 @@ import Sidebar from "@/components/layout/sidebar";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Roles from "@/pages/roles";
+import IncentivePlan from "@/pages/incentive-plan";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/roles" component={Roles} />
+            <Route path="/incentive-plan" component={IncentivePlan} />
             <Route component={NotFound} />
           </Switch>
         </main>
