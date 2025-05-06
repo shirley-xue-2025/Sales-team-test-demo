@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Role, Product, CombinedIncentive } from '@/lib/types';
 
 interface RoleComparisonProps {
@@ -8,6 +10,8 @@ interface RoleComparisonProps {
   selectedRoles: number[];
   combinedIncentives: CombinedIncentive[];
   onRoleSelectionChange: (roleId: number) => void;
+  isEditMode?: boolean;
+  onEditClick?: () => void;
 }
 
 const RoleComparison: React.FC<RoleComparisonProps> = ({
@@ -15,22 +19,108 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   products,
   selectedRoles,
   combinedIncentives,
-  onRoleSelectionChange
+  onRoleSelectionChange,
+  isEditMode = false,
+  onEditClick
 }) => {
   // Get all products that are part of combined incentives
   const relevantProductIds = combinedIncentives.map(ci => ci.productId);
-  const relevantProducts = products.filter(p => relevantProductIds.includes(p.id));
+  const relevantProducts = products.filter(p => relevantProductIds.includes(p.id) || selectedRoles.length === 0);
   
-  // Get a product by ID
-  const getProduct = (id: string) => products.find(p => p.id === id);
+  // State for edited values
+  const [editedValues, setEditedValues] = useState<Record<string, Record<string, { commission: string; bonus: string }>>>({});
+  
+  // Handle edit input change
+  const handleEditChange = (productId: string, roleId: number, type: 'commission' | 'bonus', value: string) => {
+    setEditedValues(prev => {
+      const productKey = productId;
+      const roleKey = roleId.toString();
+      
+      return {
+        ...prev,
+        [productKey]: {
+          ...(prev[productKey] || {}),
+          [roleKey]: {
+            ...(prev[productKey]?.[roleKey] || { commission: '', bonus: '' }),
+            [type]: value
+          }
+        }
+      };
+    });
+  };
+  
+  // Calculate total values for a product
+  const calculateTotals = (product: Product) => {
+    if (selectedRoles.length === 0) {
+      return { commission: '0%', bonus: '0€' };
+    }
+    
+    let totalCommission = 0;
+    let totalBonus = 0;
+    
+    selectedRoles.forEach(roleId => {
+      const roleKey = roleId.toString();
+      const productKey = product.id;
+      
+      // Check if there's an edited value
+      if (editedValues[productKey]?.[roleKey]) {
+        const commission = editedValues[productKey][roleKey].commission;
+        const bonus = editedValues[productKey][roleKey].bonus;
+        
+        totalCommission += parseFloat(commission.replace('%', '') || '0');
+        totalBonus += parseFloat(bonus.replace('€', '') || '0');
+      } else {
+        // Use default value from product
+        totalCommission += parseFloat(product.commission.replace('%', '') || '0');
+        totalBonus += parseFloat(product.bonus.replace('€', '') || '0');
+      }
+    });
+    
+    return {
+      commission: `${totalCommission}%`,
+      bonus: `${totalBonus}€`
+    };
+  };
+  
+  // Get display value for a cell
+  const getCellValue = (product: Product, roleId: number, type: 'commission' | 'bonus') => {
+    const productKey = product.id;
+    const roleKey = roleId.toString();
+    
+    if (editedValues[productKey]?.[roleKey]?.[type]) {
+      return editedValues[productKey][roleKey][type];
+    }
+    
+    return type === 'commission' ? product.commission : product.bonus;
+  };
   
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium text-gray-800">Role Combination Analysis</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Select multiple roles to see how commissions and bonuses combine across your team structure.
-        </p>
+      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 className="text-lg font-medium text-gray-800">Team incentive overview</h2>
+        <Button 
+          onClick={onEditClick}
+          className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
+        >
+          {isEditMode ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Save changes
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit incentives
+            </>
+          )}
+        </Button>
       </div>
       
       <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -49,72 +139,96 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
         </div>
       </div>
       
-      {selectedRoles.length > 0 ? (
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-3 w-1/4">Product</th>
-              {selectedRoles.map(roleId => {
-                const role = roles.find(r => r.id === roleId);
-                return (
-                  <th key={roleId} className="px-4 py-3">
-                    {role?.title || `Role ${roleId}`}
-                  </th>
-                );
-              })}
-              <th className="px-4 py-3 w-32 text-right">Combined</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {relevantProducts.map(product => {
-              const combinedIncentive = combinedIncentives.find(ci => ci.productId === product.id);
-              
+      <table className="w-full">
+        <thead className="bg-gray-50 border-b border-gray-200">
+          <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 w-1/4" rowSpan={2}>Product</th>
+            
+            {selectedRoles.map(roleId => {
+              const role = roles.find(r => r.id === roleId);
               return (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-800">
-                    {product.name}
-                  </td>
-                  
-                  {selectedRoles.map(roleId => {
-                    // This is simplified - in a real app you'd need to fetch the actual commission 
-                    // for this specific role and product combination
-                    return (
-                      <td key={roleId} className="px-4 py-3 text-sm text-gray-600">
-                        {product.commission}
-                      </td>
-                    );
-                  })}
-                  
-                  <td className="px-4 py-3 text-sm font-medium text-gray-800 text-right">
-                    {combinedIncentive?.combinedCommission || '-'}
-                  </td>
-                </tr>
+                <th key={roleId} className="px-2 py-3 text-center border-b-0" colSpan={2}>
+                  {role?.title || `Role ${roleId}`}
+                </th>
               );
             })}
             
-            {/* Bonus Summary Row */}
-            <tr className="bg-gray-50 font-medium">
-              <td className="px-4 py-3 text-sm text-gray-800">
-                Bonus Summary
-              </td>
-              
-              {selectedRoles.map(roleId => (
-                <td key={roleId} className="px-4 py-3 text-sm text-gray-600">
-                  Varies by product
+            <th className="px-2 py-3 text-center border-b-0" colSpan={2}>Total</th>
+          </tr>
+          
+          <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            {selectedRoles.map(roleId => (
+              <React.Fragment key={`headers-${roleId}`}>
+                <th className="px-2 py-3 text-center w-20">Comm. %</th>
+                <th className="px-2 py-3 text-center w-20">Bonus €</th>
+              </React.Fragment>
+            ))}
+            
+            <th className="px-2 py-3 text-center w-20">Comm. %</th>
+            <th className="px-2 py-3 text-center w-20">Bonus €</th>
+          </tr>
+        </thead>
+        
+        <tbody className="divide-y divide-gray-200 bg-white">
+          {relevantProducts.map(product => {
+            const totals = calculateTotals(product);
+            
+            return (
+              <tr key={product.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                  {product.name}
                 </td>
-              ))}
-              
-              <td className="px-4 py-3 text-sm text-gray-800 text-right">
-                Varies by product
+                
+                {selectedRoles.map(roleId => (
+                  <React.Fragment key={`values-${roleId}-${product.id}`}>
+                    <td className="px-2 py-2 text-sm text-center text-gray-600">
+                      {isEditMode ? (
+                        <Input
+                          type="text"
+                          className="h-8 text-center"
+                          value={getCellValue(product, roleId, 'commission')}
+                          onChange={(e) => handleEditChange(product.id, roleId, 'commission', e.target.value)}
+                        />
+                      ) : (
+                        getCellValue(product, roleId, 'commission')
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-sm text-center text-gray-600">
+                      {isEditMode ? (
+                        <Input
+                          type="text"
+                          className="h-8 text-center"
+                          value={getCellValue(product, roleId, 'bonus')}
+                          onChange={(e) => handleEditChange(product.id, roleId, 'bonus', e.target.value)}
+                        />
+                      ) : (
+                        getCellValue(product, roleId, 'bonus')
+                      )}
+                    </td>
+                  </React.Fragment>
+                ))}
+                
+                <td className="px-2 py-2 text-sm font-medium text-center text-gray-800">
+                  {totals.commission}
+                </td>
+                <td className="px-2 py-2 text-sm font-medium text-center text-gray-800">
+                  {totals.bonus}
+                </td>
+              </tr>
+            );
+          })}
+          
+          {relevantProducts.length === 0 && (
+            <tr>
+              <td colSpan={selectedRoles.length * 2 + 3} className="p-8 text-center text-gray-500">
+                {selectedRoles.length === 0 
+                  ? "Select at least one role to see comparison data." 
+                  : "No products available for the selected roles."}
               </td>
             </tr>
-          </tbody>
-        </table>
-      ) : (
-        <div className="p-8 text-center text-gray-500">
-          <p>Select at least one role to see comparison data.</p>
-        </div>
-      )}
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
