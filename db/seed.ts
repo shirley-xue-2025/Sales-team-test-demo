@@ -15,19 +15,22 @@ async function seed() {
       // Seed roles
       const seedRoles = [
         {
-          title: 'Sales Manager',
-          description: 'Oversees the sales team and strategy implementation. Responsible for team performance and meeting targets.',
-          permissions: ['admin', 'edit', 'view'],
-        },
-        {
-          title: 'Account Executive',
-          description: 'Responsible for managing client accounts and sales processes. Works with clients to understand needs and propose solutions.',
+          title: 'Closer',
+          description: 'Responsible for finalizing deals with clients and ensuring customer satisfaction with the purchase.',
           permissions: ['edit', 'view'],
+          isDefault: true
         },
         {
-          title: 'Sales Representative',
-          description: 'Handles direct sales with customers. Responsible for prospecting, presenting, and closing deals with new customers.',
+          title: 'Setter',
+          description: 'Responsible for initial client prospecting and scheduling appointments for Closers.',
           permissions: ['view'],
+          isDefault: false
+        },
+        {
+          title: 'Senior Closer',
+          description: 'Handles high-value and complex sales deals. Has extensive sales experience and mentors other team members.',
+          permissions: ['admin', 'edit', 'view'],
+          isDefault: false
         },
       ];
       

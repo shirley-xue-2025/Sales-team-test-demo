@@ -23,23 +23,21 @@ export default function DealMembersSection({
   initialMembers = [],
   onMembersChange
 }: DealMembersSectionProps) {
-  // Sample team members - in a real app, these would come from an API
+  // Sample team members - consistent with our Member page data
   const teamMembers = [
-    { id: 1, name: 'Abdullah Khalid Cowdwallis', email: 'abdullah@example.com' },
-    { id: 2, name: 'Maria Rodriguez', email: 'maria@example.com' },
-    { id: 3, name: 'John Smith', email: 'john@example.com' },
-    { id: 4, name: 'Sarah Johnson', email: 'sarah@example.com' },
-    { id: 5, name: 'Luis Garcia', email: 'luis@example.com' },
+    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com' },
+    { id: 1410, name: 'Abdullah Khalid', email: 'abdullah.khalid@example.com' },
+    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com' },
   ];
 
   // State for tracking role assignments
   const [dealMembers, setDealMembers] = useState<DealMember[]>(initialMembers.length ? initialMembers : [
     // Default to showing myself as a Closer
     { 
-      id: 999, // Special ID for myself
-      name: "The Closer", 
-      email: "me@example.com",
-      roleId: availableRoles.find(r => r.title.includes("Closer"))?.id || availableRoles[0]?.id || 0 
+      id: 999, // Special ID for current user
+      name: "Muhammad Gunes", 
+      email: "muhammad.gunes@example.com",
+      roleId: availableRoles.find(r => r.title === "Closer")?.id || availableRoles[0]?.id || 0 
     }
   ]);
 
@@ -170,7 +168,7 @@ export default function DealMembersSection({
             <div className="h-4 w-4 bg-gray-50 border border-gray-300 rounded-full mr-2 flex items-center justify-center">
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
             </div>
-            <div className="text-sm">The Closer</div>
+            <div className="text-sm">Closer</div>
           </div>
         </div>
       </div>

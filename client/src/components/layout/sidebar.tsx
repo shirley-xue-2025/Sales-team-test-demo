@@ -176,11 +176,6 @@ const Sidebar: React.FC = () => {
                   Members
                 </a>
               </Link>
-              <Link href="/roles">
-                <a className={`block px-3 py-1 text-sm text-gray-400 hover:text-white ${location === '/roles' ? 'text-white' : ''}`}>
-                  Roles
-                </a>
-              </Link>
             </div>
           </div>
           

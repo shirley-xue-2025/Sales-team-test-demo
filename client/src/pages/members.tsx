@@ -58,17 +58,17 @@ export default function MembersPage() {
     },
   });
 
-  // Mock members data
+  // Mock members data - matching our three roles (1=Closer, 2=Setter, 3=Senior Closer)
   const members: Member[] = [
-    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 },
-    { id: 1410, name: 'Abdullah Khalid Cuadrado', email: 'abdullah.khalid@example.com', roleId: 2 },
-    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com', roleId: 3 },
+    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer (default role)
+    { id: 1410, name: 'Abdullah Khalid', email: 'abdullah.khalid@example.com', roleId: 2 }, // Setter
+    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com', roleId: 3 }, // Senior Closer
   ];
 
   // Mock pending invitations
   const invitations = [
-    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' },
-    { email: 'jane.smith@example.com', roleId: 2, sentAt: '2023-05-02T14:30:00Z' },
+    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer (default role)
+    { email: 'jane.smith@example.com', roleId: 3, sentAt: '2023-05-02T14:30:00Z' }, // Senior Closer
   ];
 
   const handleSendInvitation = () => {
