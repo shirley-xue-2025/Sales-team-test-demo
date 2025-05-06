@@ -11,8 +11,8 @@ export const storage = {
   },
   
   getRoleCount: async (): Promise<number> => {
-    const result = await db.select({ count: db.fn.count() }).from(roles);
-    return Number(result[0].count);
+    const result = await db.select().from(roles);
+    return result.length;
   },
   
   getRoleById: async (id: number): Promise<Role | undefined> => {

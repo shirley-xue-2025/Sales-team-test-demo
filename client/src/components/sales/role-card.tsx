@@ -63,9 +63,11 @@ const RoleCard: React.FC<RoleCardProps> = ({ role, onEdit, onDelete }) => {
         <div className="w-full">
           <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
           <div className="flex flex-wrap gap-2">
-            {Array.isArray(role.permissions) ? role.permissions.map((permission: string) => (
-              <PermissionBadge key={permission} permission={permission} />
-            )) : null}
+            {Array.isArray(role.permissions) ? 
+              (role.permissions as string[]).map((permission: string) => (
+                <PermissionBadge key={permission} permission={permission} />
+              )) 
+            : null}
           </div>
         </div>
       </CardFooter>
