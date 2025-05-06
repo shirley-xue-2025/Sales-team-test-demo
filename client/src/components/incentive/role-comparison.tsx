@@ -153,7 +153,9 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
               );
             })}
             
-            <th className="px-2 py-3 text-center border-b-0" colSpan={2}>Total</th>
+            <th className="px-2 py-3 text-center border-b-0 bg-green-50 border-l border-gray-200" colSpan={2}>
+              <span className="text-green-800">Total</span>
+            </th>
           </tr>
           
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -164,8 +166,8 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
               </React.Fragment>
             ))}
             
-            <th className="px-2 py-3 text-center w-20">Comm. %</th>
-            <th className="px-2 py-3 text-center w-20">Bonus €</th>
+            <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600 border-l border-gray-200">Comm. %</th>
+            <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600">Bonus €</th>
           </tr>
         </thead>
         
@@ -208,10 +210,10 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                   </React.Fragment>
                 ))}
                 
-                <td className="px-2 py-2 text-sm font-medium text-center text-gray-800">
+                <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50 border-l border-gray-200">
                   {totals.commission}
                 </td>
-                <td className="px-2 py-2 text-sm font-medium text-center text-gray-800">
+                <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50">
                   {totals.bonus}
                 </td>
               </tr>
