@@ -18,7 +18,7 @@ export function AccountSwitcher({ className = '' }: AccountSwitcherProps) {
       setLocation('/');
     } else {
       // If currently in admin view, go to sales member view
-      setLocation('/sales-member/products');
+      setLocation('/sales-member/overview');
     }
   };
   

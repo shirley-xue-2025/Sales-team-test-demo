@@ -13,6 +13,7 @@ import DealDetails from "@/pages/deal-details";
 import Members from "@/pages/members";
 
 // Sales Member pages
+import SalesMemberOverview from "@/pages/sales-member/overview";
 import SalesMemberProducts from "@/pages/sales-member/products";
 import SalesMemberDeals from "@/pages/sales-member/deals";
 import SalesMemberDealDetails from "@/pages/sales-member/deal-details";
@@ -34,6 +35,7 @@ function Router() {
             </Route>
             
             {/* Sales Member Routes */}
+            <Route path="/sales-member/overview" component={SalesMemberOverview} />
             <Route path="/sales-member/products" component={SalesMemberProducts} />
             <Route path="/sales-member/deals" component={SalesMemberDeals} />
             <Route path="/sales-member/deals/:id">

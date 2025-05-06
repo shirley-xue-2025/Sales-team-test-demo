@@ -243,10 +243,23 @@ const Sidebar: React.FC = () => {
           {/* Navigation links - conditionally rendered based on section */}
           {renderMenu()}
 
-          {/* Footer - only for sales member section */}
+          {/* User profile and role - only for sales member section */}
           {isSalesMember && (
-            <div className="p-4 text-xs text-gray-500 border-t border-gray-800 mt-auto">
-              <div>© ablefy 2025</div>
+            <div className="mt-auto">
+              <div className="border-t border-gray-800 p-4">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium mr-2">
+                    MG
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Muhammad Gunes</div>
+                    <div className="text-xs text-green-500">Closer</div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 text-xs text-gray-500 border-t border-gray-800">
+                <div>© ablefy 2025</div>
+              </div>
             </div>
           )}
         </div>
