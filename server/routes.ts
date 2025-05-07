@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from 'zod';
 import { roleInsertSchema, roleValidationSchema } from "@shared/schema";
+import { generateRoleDescription } from "./services/openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API prefix
@@ -117,6 +118,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error deleting role:', error);
       res.status(500).json({ message: error.message || 'Failed to delete role' });
+    }
+  });
+
+  // Generate role description using AI
+  app.post(`${apiPrefix}/generate-role-description`, async (req, res) => {
+    try {
+      const { roleName } = req.body;
+      
+      if (!roleName || typeof roleName !== 'string' || roleName.trim() === '') {
+        return res.status(400).json({ message: 'Role name is required' });
+      }
+      
+      const description = await generateRoleDescription(roleName);
+      res.json({ description });
+    } catch (error: any) {
+      console.error('Error generating role description:', error);
+      res.status(500).json({ message: error.message || 'Failed to generate role description' });
     }
   });
 
