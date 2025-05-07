@@ -8,8 +8,10 @@ import { showToast } from '@/components/ui/sonner';
 import RoleCard from '@/components/sales/role-card';
 import RoleForm from '@/components/sales/role-form';
 import DeleteRoleDialog from '@/components/sales/delete-role-dialog';
+import RoleRecommendationModal from '@/components/sales/role-recommendation-modal';
 import { type Role, type RoleInsert } from '@shared/schema';
 import { useLocation } from 'wouter';
+import { Sparkles } from 'lucide-react';
 
 const RolesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('members');
@@ -17,6 +19,7 @@ const RolesPage: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState<boolean>(false);
   
   // Mock member data with proper email format
   const mockMembers = [
@@ -170,6 +173,31 @@ const RolesPage: React.FC = () => {
     setLocation(`/incentive-plan?roleId=${roleId}`);
   }, [setLocation]);
   
+  // Handler for opening the role recommendation modal
+  const handleOpenRecommendation = useCallback(() => {
+    setIsRecommendationModalOpen(true);
+  }, []);
+  
+  // Handler for handling a selected recommendation 
+  const handleRecommendationSelect = useCallback((roleData: { title: string; description: string; permissions: string[] }) => {
+    // Create a new role data object from the recommendation
+    const newRole: RoleInsert = {
+      title: roleData.title,
+      description: roleData.description,
+      permissions: roleData.permissions,
+      isDefault: false,
+    };
+    
+    // Create the new role
+    createRoleMutation.mutate(newRole);
+    
+    // Show success message
+    showToast('AI-recommended role added', {
+      description: `The ${roleData.title} role has been added to your sales team.`,
+      position: 'top-center',
+    });
+  }, [createRoleMutation]);
+  
   // Render loading skeletons
   const renderSkeletons = () => {
     return Array(3).fill(0).map((_, i) => (
@@ -229,16 +257,25 @@ const RolesPage: React.FC = () => {
         </h1>
         <div className="flex space-x-3">
           {activeTab === 'roles' ? (
-            <Button 
-              onClick={handleAddRole}
-              className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Create role
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleOpenRecommendation}
+                className="text-sm h-9 px-4 py-2 rounded-sm border border-green-600 bg-white text-green-600 hover:bg-green-50"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Recommended Roles
+              </Button>
+              <Button 
+                onClick={handleAddRole}
+                className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create role
+              </Button>
+            </div>
           ) : (
             <>
               <Button variant="outline" className="text-sm h-9 px-4 py-2 rounded-md border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
@@ -397,6 +434,14 @@ const RolesPage: React.FC = () => {
         }}
         role={roleToDelete}
         onConfirm={confirmDeleteRole}
+      />
+      
+      {/* Role recommendation modal */}
+      <RoleRecommendationModal
+        open={isRecommendationModalOpen}
+        onOpenChange={setIsRecommendationModalOpen}
+        onSelect={handleRecommendationSelect}
+        currentRoles={rolesQuery.data || []}
       />
     </div>
   );
