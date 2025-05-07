@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,32 +24,10 @@ const RolesPage: React.FC = () => {
     { id: 416, name: "Fernando Ferreira", email: "fernando.ferreira@example.com" }
   ];
   
-  // Mock sales roles data as shown in the screenshot with updated names
-  const salesRoles = [
-    { 
-      id: 1, 
-      title: "Setter", 
-      description: "Qualifies leads and schedules appointments for closers", 
-      isDefault: true,
-      memberCount: 3 
-    },
-    { 
-      id: 2, 
-      title: "Junior Closer", 
-      description: "Responsible for converting qualified prospects into clients", 
-      isDefault: false,
-      memberCount: 0
-    },
-    { 
-      id: 3, 
-      title: "Senior Closer", 
-      description: "Handles high-value clients and complex sales situations", 
-      isDefault: false,
-      memberCount: 0
-    }
-  ];
-  
   const queryClient = useQueryClient();
+  
+  // Create a reference to the location setter function
+  const [, setLocation] = useLocation();
   
   // Queries
   const rolesQuery = useQuery<Role[]>({
@@ -139,50 +117,47 @@ const RolesPage: React.FC = () => {
   });
   
   // Event handlers
-  const handleAddRole = () => {
+  const handleAddRole = useCallback(() => {
     setSelectedRole(undefined);
     setOpenRoleForm(true);
-  };
+  }, []);
   
-  const handleEditRole = (role: Role) => {
-    setSelectedRole(role);
+  const handleEditRole = useCallback((role: Role) => {
+    setSelectedRole({...role});
     setOpenRoleForm(true);
-  };
+  }, []);
   
-  const handleDeleteRole = (id: number) => {
-    const roleToDelete = rolesQuery.data?.find(role => role.id === id);
-    if (roleToDelete) {
-      setRoleToDelete(roleToDelete);
+  const handleDeleteRole = useCallback((id: number) => {
+    const role = rolesQuery.data?.find(role => role.id === id);
+    if (role) {
+      setRoleToDelete({...role});
     }
-  };
+  }, [rolesQuery.data]);
   
-  const confirmDeleteRole = () => {
+  const confirmDeleteRole = useCallback(() => {
     if (roleToDelete !== null) {
       deleteRoleMutation.mutate(roleToDelete.id);
       setRoleToDelete(null);
     }
-  };
+  }, [roleToDelete, deleteRoleMutation]);
   
-  const handleFormSubmit = (data: RoleInsert) => {
+  const handleFormSubmit = useCallback((data: RoleInsert) => {
     if (selectedRole) {
       updateRoleMutation.mutate({ id: selectedRole.id, role: data });
     } else {
       createRoleMutation.mutate(data);
     }
     setOpenRoleForm(false);
-  };
+  }, [selectedRole, updateRoleMutation, createRoleMutation]);
   
-  const handleSetAsDefault = (roleId: number) => {
+  const handleSetAsDefault = useCallback((roleId: number) => {
     setRoleAsDefaultMutation.mutate(roleId);
-  };
+  }, [setRoleAsDefaultMutation]);
   
-  // Create a reference to the location setter function outside of handlers
-  const [, setLocation] = useLocation();
-  
-  const handleConfigureIncentive = (roleId: number) => {
+  const handleConfigureIncentive = useCallback((roleId: number) => {
     // Navigate to incentive plan page with this role selected
     setLocation(`/incentive-plan?roleId=${roleId}`);
-  };
+  }, [setLocation]);
   
   // Render loading skeletons
   const renderSkeletons = () => {

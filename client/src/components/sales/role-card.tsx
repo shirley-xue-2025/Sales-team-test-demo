@@ -39,26 +39,29 @@ const RoleCard: React.FC<RoleCardProps> = ({
   onSetAsDefault,
   totalRoles 
 }) => {
-  // Use a static variable instead of state to track which dropdown is open
+  // Use location for navigation
   const [, setLocation] = useLocation();
-  // Unique ID for this role card instance
-  const [uniqueId] = React.useState(() => `role-card-${role.id}-${Math.random().toString(36).substring(2, 9)}`);
+  // Unique ID for this role card instance - use role.id directly for uniqueness
+  const uniqueId = `role-card-${role.id}`;
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   
-  // The dropdown state is now managed by a static variable reference to avoid state conflicts
-  const isDropdownOpen = () => window.__openDropdownId === uniqueId;
-  const setDropdownOpen = (open: boolean) => {
+  // Track dropdown state locally but use window.__openDropdownId as the source of truth
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Check if this specific dropdown is open
+  const isDropdownOpen = React.useCallback(() => {
+    return window.__openDropdownId === uniqueId;
+  }, [uniqueId]);
+  
+  // Set dropdown open/closed
+  const setDropdownOpen = React.useCallback((open: boolean) => {
     if (open) {
       window.__openDropdownId = uniqueId;
     } else if (window.__openDropdownId === uniqueId) {
       window.__openDropdownId = null;
     }
-    // Force re-render
-    setForceUpdate(prev => prev + 1);
-  };
-  
-  // Force re-render when dropdown state changes
-  const [forceUpdate, setForceUpdate] = React.useState(0);
+    setIsOpen(open);
+  }, [uniqueId]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -72,7 +75,7 @@ const RoleCard: React.FC<RoleCardProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [setDropdownOpen]);
 
   // Navigate to members page with filter when member count is clicked
   const handleMemberCountClick = () => {
