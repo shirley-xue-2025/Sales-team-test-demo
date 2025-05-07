@@ -31,12 +31,14 @@ type FormValues = {
   title: string;
   description: string;
   permissions: string[];
+  isDefault: boolean;
 };
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
+  isDefault: z.boolean().optional().default(false),
 }) satisfies z.ZodType<FormValues>;
 
 interface RoleFormProps {

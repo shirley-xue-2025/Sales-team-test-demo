@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/sonner';
 import RoleCard from '@/components/sales/role-card';
 import RoleForm from '@/components/sales/role-form';
 import { type Role, type RoleInsert } from '@shared/schema';
+import { useLocation } from 'wouter';
 
 const RolesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('members');
@@ -72,6 +73,26 @@ const RolesPage: React.FC = () => {
     onError: (error) => {
       showToast('Failed to create role', {
         description: error.message || 'An error occurred while creating the role.',
+        position: 'top-center',
+      });
+    },
+  });
+  
+  const setRoleAsDefaultMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('PUT', `/api/roles/${id}/default`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      showToast('Default role updated', {
+        description: 'The default role has been updated successfully.',
+        position: 'top-center',
+      });
+    },
+    onError: (error) => {
+      showToast('Failed to update default role', {
+        description: error.message || 'An error occurred while updating the default role.',
         position: 'top-center',
       });
     },
@@ -146,6 +167,16 @@ const RolesPage: React.FC = () => {
       createRoleMutation.mutate(data);
     }
     setOpenRoleForm(false);
+  };
+  
+  const handleSetAsDefault = (roleId: number) => {
+    setRoleAsDefaultMutation.mutate(roleId);
+  };
+  
+  const handleConfigureIncentive = (roleId: number) => {
+    // Navigate to incentive plan page with this role selected
+    const [, setLocation] = useLocation();
+    setLocation(`/incentive-plan?roleId=${roleId}`);
   };
   
   // Render loading skeletons
@@ -336,42 +367,23 @@ const RolesPage: React.FC = () => {
           
           {activeTab === 'roles' && (
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
-              {salesRoles.map((role) => (
-                <div key={role.id} className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                  <div className="flex justify-between items-start p-5">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-base font-medium text-gray-900">{role.title}</h3>
-                        {role.isDefault && (
-                          <span className="px-2 py-0.5 text-xs rounded-sm bg-gray-100 text-gray-600">Default</span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-gray-600">{role.description}</p>
-                    </div>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="19" cy="12" r="1"></circle>
-                        <circle cx="5" cy="12" r="1"></circle>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                      {role.memberCount} members
-                    </div>
-                    <button className="text-xs px-3 py-1 bg-white border border-gray-300 rounded-sm text-gray-600 hover:bg-gray-50">
-                      Configure
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {rolesQuery.isLoading ? (
+                renderSkeletons()
+              ) : rolesQuery.data && rolesQuery.data.length > 0 ? (
+                rolesQuery.data.map((role) => (
+                  <RoleCard
+                    key={role.id}
+                    role={role}
+                    onEdit={handleEditRole}
+                    onDelete={handleDeleteRole}
+                    onConfigureIncentive={handleConfigureIncentive}
+                    onSetAsDefault={handleSetAsDefault}
+                    totalRoles={rolesQuery.data.length}
+                  />
+                ))
+              ) : (
+                renderEmptyState()
+              )}
             </div>
           )}
         </div>
