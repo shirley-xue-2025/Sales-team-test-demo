@@ -68,6 +68,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router />
       <AccountSwitcher />
+      {/* Version indicator - fixed position at top right */}
+      <div className="fixed top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-md z-50 text-sm font-medium">
+        Version A
+      </div>
       <Toaster />
       <SonnerToaster />
     </QueryClientProvider>
