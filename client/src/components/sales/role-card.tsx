@@ -4,6 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { type Role } from '@shared/schema';
 import { useLocation } from 'wouter';
 
+// Define interface for dropdown menu items
+interface DropdownMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+}
+
 interface RoleCardProps {
   role: Role;
   onEdit: (role: Role) => void;
@@ -37,13 +46,7 @@ function DropdownMenu({
   items,
 }: {
   trigger: React.ReactNode;
-  items: Array<{
-    label: string;
-    icon?: React.ReactNode;
-    onClick: () => void;
-    disabled?: boolean;
-    className?: string;
-  }>;
+  items: DropdownMenuItem[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -82,9 +85,31 @@ function DropdownMenu({
     };
   }, [isOpen]);
 
+  const handleItemClick = (item: typeof items[0], e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only proceed if not disabled
+    if (!item.disabled) {
+      try {
+        // Call the item's click handler
+        item.onClick();
+      } catch (error) {
+        console.error("Error executing menu item click:", error);
+      }
+      
+      // Close the dropdown
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+      <div onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+      }}>{trigger}</div>
       
       {isOpen && (
         <div className="absolute right-0 top-8 mt-1 z-50 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200 w-48">
@@ -92,10 +117,7 @@ function DropdownMenu({
             {items.map((item, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  item.onClick();
-                  setIsOpen(false);
-                }}
+                onClick={(e) => handleItemClick(item, e)}
                 disabled={item.disabled}
                 className={item.className || "flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
               >
@@ -171,7 +193,7 @@ const RoleCard = ({
   );
   
   // Create dropdown menu items
-  const dropdownItems = [
+  const dropdownItems: DropdownMenuItem[] = [
     {
       label: 'Edit role',
       icon: editIcon,

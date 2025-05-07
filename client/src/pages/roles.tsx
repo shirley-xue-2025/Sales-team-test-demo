@@ -124,11 +124,14 @@ const RolesPage: React.FC = () => {
   }, []);
   
   const handleEditRole = useCallback((role: Role) => {
-    setSelectedRole({...role});
+    console.log("Editing role:", role);
+    // Create a deep copy of the role to avoid any reference issues
+    setSelectedRole(JSON.parse(JSON.stringify(role)));
     setOpenRoleForm(true);
   }, []);
   
   const handleDeleteRole = useCallback((id: number) => {
+    console.log("Deleting role:", id);
     const role = rolesQuery.data?.find(role => role.id === id);
     if (role) {
       setRoleToDelete({...role});
