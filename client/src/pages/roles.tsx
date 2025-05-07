@@ -16,6 +16,7 @@ const RolesPage: React.FC = () => {
   const [openRoleForm, setOpenRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   
   // Mock member data with proper email format
   const mockMembers = [
@@ -131,12 +132,14 @@ const RolesPage: React.FC = () => {
     const role = rolesQuery.data?.find(role => role.id === id);
     if (role) {
       setRoleToDelete({...role});
+      setIsDeleteDialogOpen(true);
     }
   }, [rolesQuery.data]);
   
   const confirmDeleteRole = useCallback(() => {
     if (roleToDelete !== null) {
       deleteRoleMutation.mutate(roleToDelete.id);
+      setIsDeleteDialogOpen(false);
       setRoleToDelete(null);
     }
   }, [roleToDelete, deleteRoleMutation]);
@@ -379,8 +382,11 @@ const RolesPage: React.FC = () => {
       
       {/* Delete confirmation dialog */}
       <DeleteRoleDialog
-        open={roleToDelete !== null}
-        onOpenChange={(open) => !open && setRoleToDelete(null)}
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) setRoleToDelete(null);
+        }}
         role={roleToDelete}
         onConfirm={confirmDeleteRole}
       />
