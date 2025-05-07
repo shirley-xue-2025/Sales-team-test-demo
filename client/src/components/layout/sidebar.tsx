@@ -173,7 +173,7 @@ const Sidebar: React.FC = () => {
               </Link>
               <Link href="/members">
                 <a className={`block px-3 py-1 text-sm text-gray-400 hover:text-white ${location === '/members' ? 'text-white' : ''}`}>
-                  My Sales Team
+                  Members
                 </a>
               </Link>
             </div>

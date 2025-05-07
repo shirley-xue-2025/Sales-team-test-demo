@@ -60,12 +60,14 @@ export default function MembersPage() {
 
   // Mock members data - using only Closer role
   const members: Member[] = [
-    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer (default role)
+    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer role
+    { id: 1422, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', roleId: 1 }, // Closer role
+    { id: 1437, name: 'David Chen', email: 'david.chen@example.com', roleId: 1 }, // Closer role
   ];
 
   // Mock pending invitations
   const invitations = [
-    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer (default role)
+    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer role
   ];
 
   const handleSendInvitation = () => {
@@ -238,22 +240,41 @@ export default function MembersPage() {
                 <div className="flex justify-between items-start p-5">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-base font-medium text-gray-900">{role.title}</h3>
+                      <h3 className="text-base font-medium text-gray-900">Closer</h3>
                       {role.isDefault && (
                         <span className="px-2 py-0.5 text-xs rounded-sm bg-gray-100 text-gray-600">Default</span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">{role.description}</p>
+                    <p className="mt-1 text-sm text-gray-600">Responsible for closing deals with customers, managing client relationships, and ensuring customer satisfaction throughout the sales process.</p>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="1"></circle>
-                      <circle cx="19" cy="12" r="1"></circle>
-                      <circle cx="5" cy="12" r="1"></circle>
-                    </svg>
-                  </button>
+                  <div className="relative group">
+                    <button className="text-gray-400 hover:text-gray-600 focus:outline-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                      </svg>
+                    </button>
+                    {/* Dropdown menu */}
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg z-10 hidden group-hover:block border border-gray-200">
+                      <div className="py-1">
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Edit role
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Configure incentive plan
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Set as default
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                          Remove role
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center">
                   <div className="flex items-center text-sm text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -263,9 +284,6 @@ export default function MembersPage() {
                     </svg>
                     {members.filter(m => m.roleId === role.id).length} members
                   </div>
-                  <button className="text-xs px-3 py-1 bg-white border border-gray-300 rounded-sm text-gray-600 hover:bg-gray-50">
-                    Configure
-                  </button>
                 </div>
               </div>
             ))}
