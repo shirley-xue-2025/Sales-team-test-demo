@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Role } from '@/lib/types';
 import { RoleInsert } from '@shared/schema';
 import { Settings, MoreVertical } from 'lucide-react';
@@ -11,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import RoleForm from '@/components/sales/role-form';
 import { showToast } from '@/components/ui/sonner';
+import { useLocation } from 'wouter';
 
 interface Member {
   id: number;
@@ -20,6 +22,7 @@ interface Member {
 }
 
 export default function MembersPage() {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('active');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -261,55 +264,70 @@ export default function MembersPage() {
                 <div className="flex justify-between items-start p-5">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-base font-medium text-gray-900">Closer</h3>
+                      <h3 className="text-base font-medium text-gray-900">{role.title}</h3>
                       {role.isDefault && (
                         <span className="px-2 py-0.5 text-xs rounded-sm bg-gray-100 text-gray-600">Default</span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">Responsible for closing deals with customers, managing client relationships, and ensuring customer satisfaction throughout the sales process.</p>
+                    <p className="mt-1 text-sm text-gray-600">{role.description}</p>
                   </div>
                   <div className="relative">
-                    <button 
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none" 
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="19" cy="12" r="1"></circle>
-                        <circle cx="5" cy="12" r="1"></circle>
-                      </svg>
-                    </button>
-                    {/* Dropdown menu */}
-                    {dropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg z-10 border border-gray-200">
-                        <div className="py-1">
-                          <button 
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setDropdownOpen(false)}
-                          >
-                            Edit role
-                          </button>
-                          <button 
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setDropdownOpen(false)}
-                          >
-                            Configure incentive plan
-                          </button>
-                          <button 
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setDropdownOpen(false)}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="text-gray-400 hover:text-gray-600 focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                          </svg>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[200px]">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => {
+                            setSelectedRole(role);
+                            setRoleFormOpen(true);
+                          }}
+                        >
+                          Edit role
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => {
+                            setLocation(`/incentive-plan?roleId=${role.id}`);
+                          }}
+                        >
+                          Configure incentive plan
+                        </DropdownMenuItem>
+                        
+                        {!role.isDefault && (
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => {
+                              // In a real app, API call to set as default would go here
+                              console.log("Setting role as default:", role.id);
+                            }}
                           >
                             Set as default
-                          </button>
-                          <button 
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                            onClick={() => setDropdownOpen(false)}
-                          >
-                            Remove role
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                          </DropdownMenuItem>
+                        )}
+                        
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-red-600 cursor-pointer"
+                          disabled={roles.length <= 1}
+                          onClick={() => {
+                            if (roles.length > 1) {
+                              // In a real app, API call to delete would go here
+                              console.log("Deleting role:", role.id);
+                            }
+                          }}
+                        >
+                          Remove role
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center">
