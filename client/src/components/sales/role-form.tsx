@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,12 +24,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { type Role, type RoleInsert } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
+import { Loader2 } from 'lucide-react';
+
+type FormValues = {
+  title: string;
+  description: string;
+  permissions: string[];
+};
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
-});
+}) satisfies z.ZodType<FormValues>;
 
 interface RoleFormProps {
   open: boolean;
@@ -45,13 +53,17 @@ const RoleForm: React.FC<RoleFormProps> = ({
   onSubmit 
 }) => {
   const isEditMode = !!initialData;
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
-      permissions: initialData?.permissions || [],
+      permissions: Array.isArray(initialData?.permissions) 
+        ? initialData.permissions as string[] 
+        : ['edit', 'view'], // Default permissions
     },
   });
 
@@ -59,6 +71,49 @@ const RoleForm: React.FC<RoleFormProps> = ({
     onSubmit(data);
     form.reset();
   };
+  
+  const generateDescription = async (roleName: string) => {
+    if (!roleName || roleName.length < 2 || isEditMode) return;
+    
+    try {
+      setIsGeneratingDescription(true);
+      const response = await apiRequest('POST', '/api/generate-role-description', { roleName });
+      const data = await response.json();
+      
+      if (data.description) {
+        form.setValue('description', data.description, { 
+          shouldValidate: true,
+          shouldDirty: true 
+        });
+      }
+    } catch (error) {
+      console.error('Error generating description:', error);
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
+
+  // When title changes, generate description after a brief delay
+  const handleTitleChange = (value: string) => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      generateDescription(value);
+    }, 1000); // 1 second delay
+    
+    setDebounceTimeout(timeout);
+  };
+  
+  // Clean up timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [debounceTimeout]);
   
   const availablePermissions = [
     { id: 'admin', label: 'Administrator (Full access)' },
@@ -93,6 +148,10 @@ const RoleForm: React.FC<RoleFormProps> = ({
                       placeholder="e.g., Sales Representative" 
                       className="border-gray-300 rounded-sm mt-2 text-base py-5 px-4" 
                       {...field} 
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleTitleChange(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -105,15 +164,24 @@ const RoleForm: React.FC<RoleFormProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium text-gray-800">
-                    Description
-                  </FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-base font-medium text-gray-800">
+                      Description
+                    </FormLabel>
+                    {isGeneratingDescription && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Generating description...
+                      </div>
+                    )}
+                  </div>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the role's responsibilities" 
+                      placeholder={isGeneratingDescription ? "Generating description..." : "Describe the role's responsibilities"} 
                       rows={4}
                       className="border-gray-300 rounded-sm mt-2 text-base py-3 px-4" 
                       {...field} 
+                      disabled={isGeneratingDescription}
                     />
                   </FormControl>
                   <FormMessage />
