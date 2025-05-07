@@ -12,25 +12,13 @@ async function seed() {
     if (existingRoles.length === 0) {
       console.log("No existing roles found. Seeding roles...");
       
-      // Seed roles
+      // Seed roles - only Closer for Version A
       const seedRoles = [
         {
           title: 'Closer',
           description: 'Responsible for finalizing deals with clients and ensuring customer satisfaction with the purchase.',
           permissions: ['edit', 'view'],
           isDefault: true
-        },
-        {
-          title: 'Setter',
-          description: 'Responsible for initial client prospecting and scheduling appointments for Closers.',
-          permissions: ['view'],
-          isDefault: false
-        },
-        {
-          title: 'Senior Closer',
-          description: 'Handles high-value and complex sales deals. Has extensive sales experience and mentors other team members.',
-          permissions: ['admin', 'edit', 'view'],
-          isDefault: false
         },
       ];
       
