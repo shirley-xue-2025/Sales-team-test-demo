@@ -38,8 +38,8 @@ const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
-  isDefault: z.boolean().optional().default(false),
-}) satisfies z.ZodType<FormValues>;
+  isDefault: z.boolean().default(false),
+});
 
 interface RoleFormProps {
   open: boolean;
@@ -66,6 +66,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
       permissions: Array.isArray(initialData?.permissions) 
         ? initialData.permissions as string[] 
         : ['edit', 'view'], // Default permissions
+      isDefault: initialData?.isDefault || false,
     },
   });
 
@@ -128,10 +129,12 @@ const RoleForm: React.FC<RoleFormProps> = ({
       <DialogContent className="sm:max-w-[500px] rounded-sm">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">
-            Create New Role
+            {isEditMode ? 'Edit Role' : 'Create New Role'}
           </DialogTitle>
           <DialogDescription className="text-base font-normal text-gray-500 mt-1">
-            Create a new role for your sales team members
+            {isEditMode 
+              ? 'Update the details for this role' 
+              : 'Create a new role for your sales team members'}
           </DialogDescription>
         </DialogHeader>
         
@@ -191,6 +194,30 @@ const RoleForm: React.FC<RoleFormProps> = ({
               )}
             />
             
+            {/* Set as default checkbox */}
+            <FormField
+              control={form.control}
+              name="isDefault"
+              render={({ field }) => (
+                <FormItem className="flex items-start space-x-3 space-y-0 pt-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium text-gray-800">
+                      Set as default role
+                    </FormLabel>
+                    <p className="text-xs text-gray-500">
+                      This role will be automatically assigned to new members
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
             {/* Hidden permissions field to satisfy validation */}
             <div className="hidden">
               {availablePermissions.map((permission) => (
@@ -232,7 +259,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                 type="submit" 
                 className="h-10 px-5 py-2 bg-gray-900 text-white rounded-sm hover:bg-gray-800 font-medium"
               >
-                Create Role
+                {isEditMode ? 'Save Changes' : 'Create Role'}
               </Button>
             </DialogFooter>
           </form>
