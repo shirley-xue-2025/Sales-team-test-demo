@@ -1,0 +1,94 @@
+Warning: validateDOMNesting(...): <a> cannot appear as a descendant of &lt;a&gt;.
+    at a
+    at a
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7dd538ba:294:18
+    at nav
+    at div
+    at aside
+    at Sidebar (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/layout/sidebar.tsx:23:41)
+    at div
+    at Router
+    at QueryClientProvider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=7dd538ba:2879:3)
+    at App
+    at _a (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=7dd538ba:624:5)
+Changing Muhammad Gunes's role to 6
+Changing Sarah Johnson's role to 6
+Changing john.doe@example.com's role to 6
+Changing john.doe@example.com's role to 5
+Warning: Cannot update a component (&#x60;RoleForm&#x60;) while rendering a different component (&#x60;Controller&#x60;). To locate the bad setState() call inside &#x60;Controller&#x60;, follow the stack trace as described in https://reactjs.org/link/setstate-in-render
+    at Controller (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=7dd538ba:298:35)
+    at FormField (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/ui/form.tsx:32:6)
+    at div
+    at form
+    at FormProvider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=7dd538ba:102:11)
+    at div
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Z2KXGB3I.js?v=7dd538ba:59:7
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:79:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:56:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NM2DVT6J.js?v=7dd538ba:29:5
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:233:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:156:58
+    at Presence (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QVRXHI5R.js?v=7dd538ba:24:11)
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:147:64
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:79:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:56:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+    at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Z2KXGB3I.js?v=7dd538ba:258:22
+    at Presence (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QVRXHI5R.js?v=7dd538ba:24:11)
+    at Provider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7dd538ba:38:15)
+    at DialogPortal (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:109:11)
+    at _c3 (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/ui/dialog.tsx:51:12)
+    at Provider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7dd538ba:38:15)
+    at Dialog (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:50:5)
+    at RoleForm (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/sales/role-form.tsx:52:3)
+    at div
+    at MembersPage (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/pages/members.tsx:31:37)
+    at Route (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7dd538ba:280:16)
+    at Switch (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7dd538ba:336:17)
+    at main
+    at div
+    at div
+    at Router
+    at QueryClientProvider…
+at Controller (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=7dd538ba:298:35)
+at FormField (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/ui/form.tsx:32:6)
+at div
+at form
+at FormProvider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=7dd538ba:102:11)
+at div
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Z2KXGB3I.js?v=7dd538ba:59:7
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:79:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:56:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NM2DVT6J.js?v=7dd538ba:29:5
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:233:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:156:58
+at Presence (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QVRXHI5R.js?v=7dd538ba:24:11)
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:147:64
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:79:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=7dd538ba:56:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=7dd538ba:42:13
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Z2KXGB3I.js?v=7dd538ba:258:22
+at Presence (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QVRXHI5R.js?v=7dd538ba:24:11)
+at Provider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7dd538ba:38:15)
+at DialogPortal (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:109:11)
+at _c3 (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/ui/dialog.tsx:51:12)
+at Provider (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7dd538ba:38:15)
+at Dialog (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MXY3755Z.js?v=7dd538ba:50:5)
+at RoleForm (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/components/sales/role-form.tsx:52:3)
+at div
+at MembersPage (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/src/pages/members.tsx:31:37)
+at Route (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7dd538ba:280:16)
+at Switch (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7dd538ba:336:17)
+at main
+at div
+at div
+at Router
+at QueryClientProvider…
+at t.value (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://f11ebdfe-7a96-4466-a5ef-635c7c170d43-00-1v5kpfaro1wyx.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

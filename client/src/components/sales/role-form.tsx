@@ -27,19 +27,16 @@ import { type Role, type RoleInsert } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 
-type FormValues = {
-  title: string;
-  description: string;
-  permissions: string[];
-  isDefault: boolean;
-};
-
+// Define the form schema first
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
   isDefault: z.boolean().default(false),
 });
+
+// Then define the FormValues type based on the schema
+type FormValues = z.infer<typeof formSchema>;
 
 interface RoleFormProps {
   open: boolean;
@@ -58,17 +55,27 @@ const RoleForm: React.FC<RoleFormProps> = ({
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
   
+  // Setup default values for the form
+  const defaultValues = React.useMemo<FormValues>(() => ({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    permissions: Array.isArray(initialData?.permissions) 
+      ? initialData.permissions as string[] 
+      : ['edit', 'view'], // Default permissions
+    isDefault: typeof initialData?.isDefault === 'boolean' ? initialData.isDefault : false,
+  }), [initialData]);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      description: initialData?.description || '',
-      permissions: Array.isArray(initialData?.permissions) 
-        ? initialData.permissions as string[] 
-        : ['edit', 'view'], // Default permissions
-      isDefault: initialData?.isDefault || false,
-    },
+    defaultValues,
   });
+  
+  // Reset form when initialData changes or dialog opens/closes
+  React.useEffect(() => {
+    if (open) {
+      form.reset(defaultValues);
+    }
+  }, [open, form, defaultValues]);
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     onSubmit(data);
@@ -226,16 +233,19 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   control={form.control}
                   name="permissions"
                   render={({ field }) => {
-                    // Auto-select all permissions by default
-                    if (!field.value.includes(permission.id)) {
-                      field.onChange([...field.value, permission.id]);
-                    }
                     return (
                       <FormItem className="hidden">
                         <FormControl>
                           <Checkbox
-                            checked={true}
-                            onChange={() => {}}
+                            checked={field.value.includes(permission.id)}
+                            onChange={() => {
+                              // Use the field.value directly in a copy
+                              const updatedValue = [...field.value];
+                              if (!updatedValue.includes(permission.id)) {
+                                updatedValue.push(permission.id);
+                                field.onChange(updatedValue);
+                              }
+                            }}
                           />
                         </FormControl>
                       </FormItem>
