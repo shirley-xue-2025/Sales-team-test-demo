@@ -173,7 +173,7 @@ const Sidebar: React.FC = () => {
               </Link>
               <Link href="/members">
                 <a className={`block px-3 py-1 text-sm text-gray-400 hover:text-white ${location === '/members' ? 'text-white' : ''}`}>
-                  Members
+                  My Sales Team
                 </a>
               </Link>
             </div>
@@ -228,7 +228,12 @@ const Sidebar: React.FC = () => {
           {/* Logo and app name */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <div className="flex items-center space-x-2">
-              <span className="text-green-500 text-xl font-bold">⮡ ablefy</span>
+              <div className="flex items-center">
+                <span className="text-green-500 text-xl font-bold mr-2">⮡ ablefy</span>
+                <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  Version A
+                </div>
+              </div>
             </div>
             <button 
               className="md:hidden text-gray-400 hover:text-white" 
