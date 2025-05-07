@@ -121,6 +121,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Set role as default
+  app.put(`${apiPrefix}/roles/:id/default`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid role ID' });
+      }
+      
+      const role = await storage.getRoleById(id);
+      if (!role) {
+        return res.status(404).json({ message: 'Role not found' });
+      }
+      
+      const updatedRole = await storage.setRoleAsDefault(id);
+      res.status(200).json(updatedRole);
+    } catch (error: any) {
+      console.error('Error setting role as default:', error);
+      res.status(500).json({ message: error.message || 'Failed to set role as default' });
+    }
+  });
+
   // Generate role description using AI
   app.post(`${apiPrefix}/generate-role-description`, async (req, res) => {
     try {

@@ -8,6 +8,7 @@ export const roles = pgTable("roles", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   permissions: jsonb("permissions").notNull().default([]),
+  isDefault: jsonb("is_default").notNull().default(false),
 });
 
 // Schemas for validation
@@ -18,6 +19,7 @@ export const roleValidationSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
+  isDefault: z.boolean().optional().default(false),
 });
 
 export const roleSelectSchema = createSelectSchema(roles);
