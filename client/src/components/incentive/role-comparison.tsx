@@ -204,10 +204,10 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             {selectedRoles.map(roleId => (
-              <React.Fragment key={`headers-${roleId}`}>
-                <th className="px-2 py-3 text-center w-20">Comm. %</th>
-                <th className="px-2 py-3 text-center w-20">Bonus €</th>
-              </React.Fragment>
+              <>
+                <th key={`comm-${roleId}`} className="px-2 py-3 text-center w-20">Comm. %</th>
+                <th key={`bonus-${roleId}`} className="px-2 py-3 text-center w-20">Bonus €</th>
+              </>
             ))}
             
             <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600 border-l border-gray-200">Comm. %</th>
@@ -228,8 +228,8 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                 </td>
                 
                 {selectedRoles.map((roleId, roleIndex) => (
-                  <React.Fragment key={`values-${roleId}-${product.id}`}>
-                    <td className="px-2 py-2 text-sm text-center text-gray-600">
+                  <>
+                    <td key={`comm-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
                         <Input
                           type="text"
@@ -242,7 +242,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                         getCellValue(product, roleId, 'commission')
                       )}
                     </td>
-                    <td className="px-2 py-2 text-sm text-center text-gray-600">
+                    <td key={`bonus-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
                         <Input
                           type="text"
@@ -254,7 +254,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                         getCellValue(product, roleId, 'bonus')
                       )}
                     </td>
-                  </React.Fragment>
+                  </>
                 ))}
                 
                 <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50 border-l border-gray-200">
