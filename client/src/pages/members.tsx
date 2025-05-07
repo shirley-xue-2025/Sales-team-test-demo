@@ -25,6 +25,7 @@ export default function MembersPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [roleFormOpen, setRoleFormOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   // We're using Role from lib/types but RoleForm expects Role from shared/schema
   // This is a temporary solution for the type compatibility
   const [selectedRole, setSelectedRole] = useState<any>(undefined);
@@ -60,14 +61,14 @@ export default function MembersPage() {
 
   // Mock members data - using only Closer role
   const members: Member[] = [
-    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer role
-    { id: 1422, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', roleId: 1 }, // Closer role
-    { id: 1437, name: 'David Chen', email: 'david.chen@example.com', roleId: 1 }, // Closer role
+    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 5 }, // Closer role
+    { id: 1422, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', roleId: 5 }, // Closer role
+    { id: 1437, name: 'David Chen', email: 'david.chen@example.com', roleId: 5 }, // Closer role
   ];
 
   // Mock pending invitations
   const invitations = [
-    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer role
+    { email: 'john.doe@example.com', roleId: 5, sentAt: '2023-05-01T10:00:00Z' }, // Closer role
   ];
 
   const handleSendInvitation = () => {
@@ -248,55 +249,47 @@ export default function MembersPage() {
                     <p className="mt-1 text-sm text-gray-600">Responsible for closing deals with customers, managing client relationships, and ensuring customer satisfaction throughout the sales process.</p>
                   </div>
                   <div className="relative">
-                    {/* Using useState to toggle dropdown */}
-                    {(() => {
-                      const [dropdownOpen, setDropdownOpen] = React.useState(false);
-                      return (
-                        <>
+                    <button 
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none" 
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                      </svg>
+                    </button>
+                    {/* Dropdown menu */}
+                    {dropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg z-10 border border-gray-200">
+                        <div className="py-1">
                           <button 
-                            className="text-gray-400 hover:text-gray-600 focus:outline-none" 
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setDropdownOpen(false)}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="1"></circle>
-                              <circle cx="19" cy="12" r="1"></circle>
-                              <circle cx="5" cy="12" r="1"></circle>
-                            </svg>
+                            Edit role
                           </button>
-                          {/* Dropdown menu */}
-                          {dropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg z-10 border border-gray-200">
-                              <div className="py-1">
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  onClick={() => setDropdownOpen(false)}
-                                >
-                                  Edit role
-                                </button>
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  onClick={() => setDropdownOpen(false)}
-                                >
-                                  Configure incentive plan
-                                </button>
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  onClick={() => setDropdownOpen(false)}
-                                >
-                                  Set as default
-                                </button>
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                  onClick={() => setDropdownOpen(false)}
-                                >
-                                  Remove role
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            Configure incentive plan
+                          </button>
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            Set as default
+                          </button>
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            Remove role
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center">
