@@ -59,8 +59,8 @@ const RoleCard = ({
   ) : null;
 
   return (
-    <Card className="overflow-hidden border border-gray-200 rounded-sm shadow-sm">
-      <CardContent className="p-5 border-b border-gray-200">
+    <Card className="overflow-hidden border border-gray-200 rounded-sm shadow-sm flex flex-col">
+      <CardContent className="p-5 border-b border-gray-200 flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <h4 className="text-md font-medium text-gray-900">{role.title}</h4>
@@ -136,11 +136,13 @@ const RoleCard = ({
           </div>
         </div>
         <p className="mt-2 text-sm text-gray-600">{role.description}</p>
-
-        {/* Member count button */}
+      </CardContent>
+      
+      {/* Member count button in separate div at bottom */}
+      <div className="px-5 py-3 border-t border-gray-200 bg-gray-50">
         <button
           onClick={handleMemberCountClick}
-          className="mt-4 text-xs text-gray-500 hover:text-gray-700 flex items-center"
+          className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -150,7 +152,7 @@ const RoleCard = ({
           </svg>
           {role.memberCount || 0} members
         </button>
-      </CardContent>
+      </div>
       <CardFooter className="px-5 py-3 bg-gray-50">
         <div className="w-full">
           <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>

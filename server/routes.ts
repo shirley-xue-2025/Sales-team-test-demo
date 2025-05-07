@@ -3,7 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from 'zod';
 import { roleInsertSchema, roleValidationSchema } from "@shared/schema";
-import { generateRoleDescription } from "./services/openai";
+import { 
+  generateRoleDescription, 
+  getTeamStructureRecommendations, 
+  generateRolePermissions,
+  RoleRecommendation 
+} from "./services/openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API prefix
@@ -156,6 +161,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error generating role description:', error);
       res.status(500).json({ message: error.message || 'Failed to generate role description' });
+    }
+  });
+
+  // Get AI-recommended roles for a sales team
+  app.post(`${apiPrefix}/recommend-roles`, async (req, res) => {
+    try {
+      const { 
+        businessDescription, 
+        existingRoles = [],
+        targetMarket = "general",
+        salesGoals = "growth" 
+      } = req.body;
+      
+      if (!businessDescription || typeof businessDescription !== 'string' || businessDescription.trim() === '') {
+        return res.status(400).json({ message: 'Business description is required' });
+      }
+      
+      // Get role recommendations from OpenAI
+      const recommendations = await getTeamStructureRecommendations(
+        businessDescription,
+        existingRoles,
+        targetMarket,
+        salesGoals
+      );
+      
+      res.json({ recommendations });
+    } catch (error: any) {
+      console.error('Error generating role recommendations:', error);
+      res.status(500).json({ message: error.message || 'Failed to generate role recommendations' });
+    }
+  });
+
+  // Generate permissions for a role
+  app.post(`${apiPrefix}/generate-role-permissions`, async (req, res) => {
+    try {
+      const { roleName, roleDescription } = req.body;
+      
+      if (!roleName || typeof roleName !== 'string' || roleName.trim() === '') {
+        return res.status(400).json({ message: 'Role name is required' });
+      }
+      
+      if (!roleDescription || typeof roleDescription !== 'string' || roleDescription.trim() === '') {
+        return res.status(400).json({ message: 'Role description is required' });
+      }
+      
+      const permissions = await generateRolePermissions(roleName, roleDescription);
+      res.json({ permissions });
+    } catch (error: any) {
+      console.error('Error generating role permissions:', error);
+      res.status(500).json({ message: error.message || 'Failed to generate role permissions' });
     }
   });
 
