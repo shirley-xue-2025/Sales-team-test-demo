@@ -39,9 +39,26 @@ const RoleCard: React.FC<RoleCardProps> = ({
   onSetAsDefault,
   totalRoles 
 }) => {
+  // Use a static variable instead of state to track which dropdown is open
   const [, setLocation] = useLocation();
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  // Unique ID for this role card instance
+  const [uniqueId] = React.useState(() => `role-card-${role.id}-${Math.random().toString(36).substring(2, 9)}`);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  
+  // The dropdown state is now managed by a static variable reference to avoid state conflicts
+  const isDropdownOpen = () => window.__openDropdownId === uniqueId;
+  const setDropdownOpen = (open: boolean) => {
+    if (open) {
+      window.__openDropdownId = uniqueId;
+    } else if (window.__openDropdownId === uniqueId) {
+      window.__openDropdownId = null;
+    }
+    // Force re-render
+    setForceUpdate(prev => prev + 1);
+  };
+  
+  // Force re-render when dropdown state changes
+  const [forceUpdate, setForceUpdate] = React.useState(0);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -78,7 +95,7 @@ const RoleCard: React.FC<RoleCardProps> = ({
           </div>
           <div className="flex space-x-1 relative" ref={dropdownRef}>
             <button 
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => setDropdownOpen(!isDropdownOpen())}
               className="text-gray-400 hover:text-gray-600 p-1 rounded-sm"
               aria-label="Role actions"
             >
@@ -88,7 +105,7 @@ const RoleCard: React.FC<RoleCardProps> = ({
                 <circle cx="12" cy="18" r="1" />
               </svg>
             </button>
-            {dropdownOpen && (
+            {isDropdownOpen() && (
               <div className="absolute right-0 top-8 mt-1 z-10 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200 w-48">
                 <div className="py-1">
                   <button 
