@@ -58,17 +58,14 @@ export default function MembersPage() {
     },
   });
 
-  // Mock members data - matching our three roles (1=Closer, 2=Setter, 3=Senior Closer)
+  // Mock members data - using only Closer role
   const members: Member[] = [
     { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer (default role)
-    { id: 1410, name: 'Abdullah Khalid', email: 'abdullah.khalid@example.com', roleId: 2 }, // Setter
-    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com', roleId: 3 }, // Senior Closer
   ];
 
   // Mock pending invitations
   const invitations = [
     { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer (default role)
-    { email: 'jane.smith@example.com', roleId: 3, sentAt: '2023-05-02T14:30:00Z' }, // Senior Closer
   ];
 
   const handleSendInvitation = () => {
@@ -95,7 +92,7 @@ export default function MembersPage() {
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">
-          {activeTab === 'roles' ? 'Sales Roles' : 'Members (MEB)'}
+          {activeTab === 'roles' ? 'Sales Roles' : 'My Sales Team'}
         </h1>
         <div className="flex space-x-2">
           {activeTab === 'roles' ? (
@@ -117,22 +114,6 @@ export default function MembersPage() {
               Invite members
             </Button>
           )}
-        </div>
-      </div>
-
-      {/* Warning Banner */}
-      <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-6 flex justify-between items-center">
-        <div className="flex items-center">
-          <div className="text-red-500 mr-2">⚠</div>
-          <span className="text-sm">You've reached your current member limit. Upgrade your plan now and let your team continue to grow.</span>
-        </div>
-        <div className="flex space-x-2">
-          <Button size="sm" variant="default" className="h-8 bg-green-600 hover:bg-green-700">
-            Upgrade
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8">
-            Hide
-          </Button>
         </div>
       </div>
 
