@@ -1,17 +1,8 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
 import { type Role } from '@shared/schema';
 import { useLocation } from 'wouter';
-
-// Define interface for dropdown menu items
-interface DropdownMenuItem {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  className?: string;
-}
 
 interface RoleCardProps {
   role: Role;
@@ -40,98 +31,6 @@ const PermissionBadge = ({ permission }: { permission: string }) => {
   );
 };
 
-// Simple dropdown component to replace the previous implementation
-function DropdownMenu({
-  trigger,
-  items,
-}: {
-  trigger: React.ReactNode;
-  items: DropdownMenuItem[];
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-  
-  // Close on ESC key
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
-    };
-    
-    if (isOpen) {
-      document.addEventListener('keydown', handleEsc);
-    }
-    
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-    };
-  }, [isOpen]);
-
-  const handleItemClick = (item: typeof items[0], e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Only proceed if not disabled
-    if (!item.disabled) {
-      try {
-        // Call the item's click handler
-        item.onClick();
-      } catch (error) {
-        console.error("Error executing menu item click:", error);
-      }
-      
-      // Close the dropdown
-      setIsOpen(false);
-    }
-  };
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <div onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsOpen(!isOpen);
-      }}>{trigger}</div>
-      
-      {isOpen && (
-        <div className="absolute right-0 top-8 mt-1 z-50 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200 w-48">
-          <div className="py-1">
-            {items.map((item, index) => (
-              <button
-                key={index}
-                onClick={(e) => handleItemClick(item, e)}
-                disabled={item.disabled}
-                className={item.className || "flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 const RoleCard = ({ 
   role, 
   onEdit, 
@@ -141,89 +40,72 @@ const RoleCard = ({
   totalRoles 
 }: RoleCardProps) => {
   const [, setLocation] = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Navigate to members page with filter when member count is clicked
   const handleMemberCountClick = useCallback(() => {
     setLocation(`/members?roleId=${role.id}`);
   }, [role.id, setLocation]);
 
-  // Icons for dropdown menu
-  const editIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-    </svg>
-  );
-  
-  const configureIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20V10" />
-      <path d="M18 20V4" />
-      <path d="M6 20v-6" />
-    </svg>
-  );
-  
-  const defaultIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  );
-  
-  const deleteIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-
-  // Dropdown trigger
-  const trigger = (
-    <button 
-      type="button"
-      className="text-gray-400 hover:text-gray-600 p-1 rounded-sm"
-      aria-label="Role actions"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="6" r="1" />
-        <circle cx="12" cy="12" r="1" />
-        <circle cx="12" cy="18" r="1" />
-      </svg>
-    </button>
-  );
-  
-  // Create dropdown menu items
-  const dropdownItems: DropdownMenuItem[] = [
-    {
-      label: 'Edit role',
-      icon: editIcon,
-      onClick: () => onEdit({ ...role }),
+  // Toggle dropdown menu
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Ensure all other menus are closed by setting global var
+    if (window.__openDropdownId !== role.id.toString()) {
+      window.__openDropdownId = role.id.toString();
+      setIsMenuOpen(true);
+    } else {
+      window.__openDropdownId = null;
+      setIsMenuOpen(false);
     }
-  ];
+    
+    // Add event listener to close menu when clicking outside
+    document.addEventListener('click', handleClickOutside, { once: true });
+  };
   
-  if (onConfigureIncentive) {
-    dropdownItems.push({
-      label: 'Configure incentive plan',
-      icon: configureIcon,
-      onClick: () => onConfigureIncentive(role.id),
-    });
-  }
+  // Close menu when clicking outside
+  const handleClickOutside = () => {
+    window.__openDropdownId = null;
+    setIsMenuOpen(false);
+  };
   
-  if (onSetAsDefault && !role.isDefault) {
-    dropdownItems.push({
-      label: 'Set as default',
-      icon: defaultIcon,
-      onClick: () => onSetAsDefault(role.id),
-    });
-  }
-  
-  dropdownItems.push({
-    label: 'Remove role',
-    icon: deleteIcon,
-    onClick: () => onDelete(role.id),
-    disabled: totalRoles <= 1,
-    className: `flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 ${totalRoles <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`,
+  // Handle menu item click
+  const handleMenuItemClick = (action: () => void, disabled: boolean = false) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!disabled) {
+      window.__openDropdownId = null;
+      setIsMenuOpen(false);
+      action();
+    }
+  };
+
+  // Handle edit role click
+  const handleEditClick = handleMenuItemClick(() => {
+    console.log("Editing role:", role);
+    onEdit(role);
   });
+  
+  // Handle configure incentive click
+  const handleConfigureClick = handleMenuItemClick(() => {
+    console.log("Configuring incentive for role:", role.id);
+    if (onConfigureIncentive) onConfigureIncentive(role.id);
+  });
+  
+  // Handle set as default click
+  const handleSetAsDefaultClick = handleMenuItemClick(() => {
+    console.log("Setting role as default:", role.id);
+    if (onSetAsDefault) onSetAsDefault(role.id);
+  });
+  
+  // Handle delete role click
+  const handleDeleteClick = handleMenuItemClick(() => {
+    console.log("Deleting role:", role.id);
+    onDelete(role.id);
+  }, totalRoles <= 1);
 
   const isDefaultBadge = role.isDefault ? (
     <Badge className="bg-green-50 text-green-700 border-green-200 ml-2 text-xs">
@@ -240,7 +122,75 @@ const RoleCard = ({
             {isDefaultBadge}
           </div>
           <div className="flex space-x-1 relative">
-            <DropdownMenu trigger={trigger} items={dropdownItems} />
+            <button 
+              type="button"
+              className="text-gray-400 hover:text-gray-600 p-1 rounded-sm"
+              aria-label="Role actions"
+              onClick={toggleMenu}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="6" r="1" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="12" cy="18" r="1" />
+              </svg>
+            </button>
+            
+            {/* Dropdown menu */}
+            {isMenuOpen && (
+              <div className="absolute right-0 top-8 mt-1 z-50 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200 w-48">
+                <div className="py-1">
+                  <button
+                    onClick={handleEditClick}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit role
+                  </button>
+                  
+                  {onConfigureIncentive && (
+                    <button
+                      onClick={handleConfigureClick}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20V10" />
+                        <path d="M18 20V4" />
+                        <path d="M6 20v-6" />
+                      </svg>
+                      Configure incentive plan
+                    </button>
+                  )}
+                  
+                  {onSetAsDefault && !role.isDefault && (
+                    <button
+                      onClick={handleSetAsDefaultClick}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      Set as default
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={handleDeleteClick}
+                    disabled={totalRoles <= 1}
+                    className={`flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 ${totalRoles <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                    Remove role
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <p className="mt-2 text-sm text-gray-600">{role.description}</p>

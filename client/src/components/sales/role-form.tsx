@@ -225,34 +225,49 @@ const RoleForm: React.FC<RoleFormProps> = ({
               )}
             />
             
-            {/* Hidden permissions field to satisfy validation */}
-            <div className="hidden">
-              {availablePermissions.map((permission) => (
-                <FormField
-                  key={permission.id}
-                  control={form.control}
-                  name="permissions"
-                  render={({ field }) => {
-                    return (
-                      <FormItem className="hidden">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value.includes(permission.id)}
-                            onChange={() => {
-                              // Use the field.value directly in a copy
-                              const updatedValue = [...field.value];
-                              if (!updatedValue.includes(permission.id)) {
-                                updatedValue.push(permission.id);
+            {/* Permissions field */}
+            <div className="space-y-4">
+              <FormLabel className="text-base font-medium text-gray-800 block mb-2">
+                Permissions
+              </FormLabel>
+              <div className="space-y-2">
+                {availablePermissions.map((permission) => (
+                  <FormField
+                    key={permission.id}
+                    control={form.control}
+                    name="permissions"
+                    render={({ field }) => {
+                      const isChecked = field.value.includes(permission.id);
+                      return (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => {
+                                console.log("Toggling permission:", permission.id, "current:", isChecked);
+                                const updatedValue = isChecked
+                                  ? field.value.filter((val: string) => val !== permission.id)
+                                  : [...field.value, permission.id];
+                                
+                                // Make sure we always have at least one permission
+                                if (updatedValue.length === 0) {
+                                  updatedValue.push('view');
+                                }
+                                
+                                console.log("Updated permissions:", updatedValue);
                                 field.onChange(updatedValue);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )
-                  }}
-                />
-              ))}
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-medium cursor-pointer">
+                            {permission.label}
+                          </FormLabel>
+                        </FormItem>
+                      )
+                    }}
+                  />
+                ))}
+              </div>
             </div>
             
             <DialogFooter className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-100">

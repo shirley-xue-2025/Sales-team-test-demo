@@ -148,11 +148,16 @@ const RolesPage: React.FC = () => {
   }, [roleToDelete, deleteRoleMutation]);
   
   const handleFormSubmit = useCallback((data: RoleInsert) => {
+    console.log("Form submitted with data:", data);
+    
     if (selectedRole) {
+      console.log("Updating role:", selectedRole.id, data);
       updateRoleMutation.mutate({ id: selectedRole.id, role: data });
     } else {
+      console.log("Creating new role:", data);
       createRoleMutation.mutate(data);
     }
+    
     setOpenRoleForm(false);
   }, [selectedRole, updateRoleMutation, createRoleMutation]);
   
