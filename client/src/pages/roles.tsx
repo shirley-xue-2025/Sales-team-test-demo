@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiRequest } from '@/lib/queryClient';
 import { showToast } from '@/components/ui/sonner';
 import RoleCard from '@/components/sales/role-card';
 import RoleForm from '@/components/sales/role-form';
+import DeleteRoleDialog from '@/components/sales/delete-role-dialog';
 import { type Role, type RoleInsert } from '@shared/schema';
 import { useLocation } from 'wouter';
 
@@ -15,7 +15,7 @@ const RolesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('members');
   const [openRoleForm, setOpenRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
-  const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   
   // Mock member data with proper email format
   const mockMembers = [
@@ -150,12 +150,15 @@ const RolesPage: React.FC = () => {
   };
   
   const handleDeleteRole = (id: number) => {
-    setRoleToDelete(id);
+    const roleToDelete = rolesQuery.data?.find(role => role.id === id);
+    if (roleToDelete) {
+      setRoleToDelete(roleToDelete);
+    }
   };
   
   const confirmDeleteRole = () => {
     if (roleToDelete !== null) {
-      deleteRoleMutation.mutate(roleToDelete);
+      deleteRoleMutation.mutate(roleToDelete.id);
       setRoleToDelete(null);
     }
   };
@@ -173,9 +176,11 @@ const RolesPage: React.FC = () => {
     setRoleAsDefaultMutation.mutate(roleId);
   };
   
+  // Create a reference to the location setter function outside of handlers
+  const [, setLocation] = useLocation();
+  
   const handleConfigureIncentive = (roleId: number) => {
     // Navigate to incentive plan page with this role selected
-    const [, setLocation] = useLocation();
     setLocation(`/incentive-plan?roleId=${roleId}`);
   };
   
@@ -398,26 +403,12 @@ const RolesPage: React.FC = () => {
       />
       
       {/* Delete confirmation dialog */}
-      <AlertDialog open={roleToDelete !== null} onOpenChange={(isOpen) => !isOpen && setRoleToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              role and remove it from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteRole}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRoleDialog
+        open={roleToDelete !== null}
+        onOpenChange={(open) => !open && setRoleToDelete(null)}
+        role={roleToDelete}
+        onConfirm={confirmDeleteRole}
+      />
     </div>
   );
 };
