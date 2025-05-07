@@ -59,17 +59,17 @@ export default function MembersPage() {
     },
   });
 
-  // Mock members data - using only Closer role
-  const members: Member[] = [
+  // Mock members data with state - using only Closer role
+  const [members, setMembers] = useState<Member[]>([
     { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 5 }, // Closer role
     { id: 1422, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', roleId: 5 }, // Closer role
     { id: 1437, name: 'David Chen', email: 'david.chen@example.com', roleId: 5 }, // Closer role
-  ];
+  ]);
 
-  // Mock pending invitations
-  const invitations = [
+  // Mock pending invitations with state
+  const [invitations, setInvitations] = useState([
     { email: 'john.doe@example.com', roleId: 5, sentAt: '2023-05-01T10:00:00Z' }, // Closer role
-  ];
+  ]);
 
   const handleSendInvitation = () => {
     // In a real app, this would send an API request
