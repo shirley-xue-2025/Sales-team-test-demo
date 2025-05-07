@@ -149,10 +149,20 @@ export default function MembersPage() {
                     <td className="px-4 py-3">{member.name}</td>
                     <td className="px-4 py-3 text-sm">{member.email}</td>
                     <td className="px-4 py-3">
-                      <Select defaultValue={member.roleId.toString()} onValueChange={(value) => {
-                        console.log(`Changing ${member.name}'s role to ${value}`);
-                        // In a real app, this would update the member's role via API
-                      }}>
+                      <Select 
+                        value={member.roleId.toString()} 
+                        onValueChange={(value) => {
+                          console.log(`Changing ${member.name}'s role to ${value}`);
+                          // Update the member in our state
+                          const roleId = parseInt(value);
+                          setMembers(prevMembers => 
+                            prevMembers.map(m => 
+                              m.id === member.id ? { ...m, roleId } : m
+                            )
+                          );
+                          // In a real app, this would also update via API
+                        }}
+                      >
                         <SelectTrigger className="h-8 text-sm w-44">
                           <SelectValue placeholder="Select role">
                             {memberRole?.title || "Select role"}
@@ -197,10 +207,20 @@ export default function MembersPage() {
                   <tr key={index} className="border-b">
                     <td className="px-4 py-3">{invitation.email}</td>
                     <td className="px-4 py-3">
-                      <Select defaultValue={invitation.roleId.toString()} onValueChange={(value) => {
-                        console.log(`Changing ${invitation.email}'s role to ${value}`);
-                        // In a real app, this would update the invitation's role via API
-                      }}>
+                      <Select 
+                        value={invitation.roleId.toString()} 
+                        onValueChange={(value) => {
+                          console.log(`Changing ${invitation.email}'s role to ${value}`);
+                          // Update the invitation in our state
+                          const roleId = parseInt(value);
+                          setInvitations(prevInvitations => 
+                            prevInvitations.map((inv, idx) => 
+                              idx === index ? { ...inv, roleId } : inv
+                            )
+                          );
+                          // In a real app, this would also update via API
+                        }}
+                      >
                         <SelectTrigger className="h-8 text-sm w-44">
                           <SelectValue placeholder="Select role">
                             {invitationRole?.title || "Select role"}
