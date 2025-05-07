@@ -26,7 +26,9 @@ export const roleSelectSchema = createSelectSchema(roles);
 
 // Types
 export type RoleInsert = z.infer<typeof roleInsertSchema>;
-export type Role = z.infer<typeof roleSelectSchema>;
+export type Role = z.infer<typeof roleSelectSchema> & {
+  memberCount?: number; // Virtual field for UI display purposes
+};
 
 // Users table (existing)
 export const users = pgTable("users", {
