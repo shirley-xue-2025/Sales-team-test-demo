@@ -1,9 +1,18 @@
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Check if OpenAI API key is available
+const apiKey = process.env.OPENAI_API_KEY;
+const openaiEnabled = !!apiKey;
+
+// Initialize OpenAI client only if API key is available
+const openai = openaiEnabled ? new OpenAI({ apiKey }) : null as unknown as OpenAI;
 
 export async function generateRoleDescription(roleName: string): Promise<string> {
+  // Return default description if OpenAI is not available
+  if (!openaiEnabled || !openai) {
+    return `Responsible for ${roleName.toLowerCase()} activities within the sales organization.`;
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -43,6 +52,36 @@ export async function getTeamStructureRecommendations(
   targetMarket: string = "general",
   salesGoals: string = "growth"
 ): Promise<RoleRecommendation[]> {
+  // Default recommendations if OpenAI is not available
+  const defaultRecommendations = [
+    {
+      title: "Sales Representative",
+      description: "Handles direct sales activities with customers to meet sales targets and grow the business.",
+      responsibilities: ["Engaging with potential customers", "Demonstrating products/services", "Closing sales", "Maintaining customer relationships"],
+      requiredSkills: ["Communication", "Negotiation", "Product knowledge", "Customer service"],
+      relevanceScore: 90
+    },
+    {
+      title: "Sales Manager",
+      description: "Oversees the sales team, sets targets, and develops strategies to maximize revenue and market penetration.",
+      responsibilities: ["Managing sales team", "Setting sales targets", "Developing sales strategies", "Analyzing sales data"],
+      requiredSkills: ["Leadership", "Strategic planning", "Sales forecasting", "Team management"],
+      relevanceScore: 85
+    },
+    {
+      title: "Account Executive",
+      description: "Manages relationships with key accounts and identifies opportunities for upselling and cross-selling.",
+      responsibilities: ["Managing key client relationships", "Identifying growth opportunities", "Negotiating contracts", "Strategic account planning"],
+      requiredSkills: ["Relationship building", "Strategic thinking", "Negotiation", "Business acumen"],
+      relevanceScore: 80
+    }
+  ];
+  
+  // Return default recommendations if OpenAI is not available
+  if (!openaiEnabled || !openai) {
+    return defaultRecommendations;
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -92,15 +131,7 @@ export async function getTeamStructureRecommendations(
     return parsed.recommendations as RoleRecommendation[];
   } catch (error) {
     console.error("Error generating role recommendations:", error);
-    
-    // Return a fallback recommendation if the API call fails
-    return [{
-      title: "Sales Representative",
-      description: "Handles direct sales activities with customers to meet sales targets and grow the business.",
-      responsibilities: ["Engaging with potential customers", "Demonstrating products/services", "Closing sales", "Maintaining customer relationships"],
-      requiredSkills: ["Communication", "Negotiation", "Product knowledge", "Customer service"],
-      relevanceScore: 90
-    }];
+    return defaultRecommendations;
   }
 }
 
@@ -108,6 +139,19 @@ export async function generateRolePermissions(
   roleName: string,
   roleDescription: string
 ): Promise<string[]> {
+  // Default permissions if OpenAI is not available
+  if (!openaiEnabled || !openai) {
+    // Different default permissions based on role name
+    const roleLower = roleName.toLowerCase();
+    if (roleLower.includes('manager') || roleLower.includes('director') || roleLower.includes('head')) {
+      return ["view", "edit", "admin", "approve", "create"];
+    } else if (roleLower.includes('executive') || roleLower.includes('lead')) {
+      return ["view", "edit", "create", "approve"];
+    } else {
+      return ["view", "create"];
+    }
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
