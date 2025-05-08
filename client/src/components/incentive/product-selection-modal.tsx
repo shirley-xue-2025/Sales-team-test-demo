@@ -86,7 +86,8 @@ export default function ProductSelectionModal({
   useEffect(() => {
     if (open) {
       console.log('Product selection modal opened with selected IDs:', selectedProductIds);
-      setLocalSelectedIds(selectedProductIds);
+      // Create a new array to avoid reference issues
+      setLocalSelectedIds([...selectedProductIds]);
       setCurrentPage(1);
       setSearchQuery('');
     }
@@ -103,13 +104,25 @@ export default function ProductSelectionModal({
   // Handle checkbox change - Only affects local state, not database
   const handleCheckboxChange = (productId: string, checked: boolean) => {
     console.log(`Checkbox change: ${productId} => ${checked ? 'checked' : 'unchecked'}`);
+    
+    // Clone the current state to avoid reference issues
+    const updatedSelections = [...localSelectedIds];
+    
     if (checked) {
-      // Just update local UI state, don't save to backend yet
-      setLocalSelectedIds(prev => [...prev, productId]);
+      // Add the product if it's not already selected
+      if (!updatedSelections.includes(productId)) {
+        updatedSelections.push(productId);
+      }
     } else {
-      // Just update local UI state, don't save to backend yet
-      setLocalSelectedIds(prev => prev.filter(id => id !== productId));
+      // Remove the product if it's currently selected
+      const index = updatedSelections.indexOf(productId);
+      if (index !== -1) {
+        updatedSelections.splice(index, 1);
+      }
     }
+    
+    // Update state with the new selections
+    setLocalSelectedIds(updatedSelections);
   };
 
   // Handle save button click
@@ -131,8 +144,8 @@ export default function ProductSelectionModal({
 
   // Handle cancel button
   const handleCancel = () => {
-    // Reset to original selections
-    setLocalSelectedIds(selectedProductIds);
+    // Reset to original selections with a new array copy
+    setLocalSelectedIds([...selectedProductIds]);
     onOpenChange(false);
   };
 
@@ -146,8 +159,8 @@ export default function ProductSelectionModal({
 
   // Handle cancel removal in warning dialog
   const handleCancelRemoval = () => {
-    // User cancelled, reset to original selections
-    setLocalSelectedIds(selectedProductIds);
+    // User cancelled, reset to original selections with a new array copy
+    setLocalSelectedIds([...selectedProductIds]);
     setShowWarning(false);
   };
   
@@ -250,6 +263,8 @@ export default function ProductSelectionModal({
                   <tr>
                     <th className="p-3 w-12">
                       <Checkbox 
+                        id="select-all-checkbox"
+                        name="select-all-checkbox"
                         checked={currentProducts.length > 0 && currentProducts.every(p => localSelectedIds.includes(p.id))}
                         onCheckedChange={(checked) => {
                           if (checked) {
@@ -287,6 +302,7 @@ export default function ProductSelectionModal({
                         <td className="p-3">
                           <Checkbox
                             id={`product-${product.id}`}
+                            name={`product-${product.id}`}
                             checked={isSelected}
                             onCheckedChange={(checked) => handleCheckboxChange(product.id, !!checked)}
                             className="rounded-sm"
