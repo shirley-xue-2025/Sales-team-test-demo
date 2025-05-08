@@ -268,17 +268,27 @@ export default function ProductSelectionModal({
                         checked={currentProducts.length > 0 && currentProducts.every(p => localSelectedIds.includes(p.id))}
                         onCheckedChange={(checked) => {
                           if (checked) {
+                            // Select all products in current view
                             const newSelectedIds = [...localSelectedIds];
+                            
+                            // Add all products from current page
                             currentProducts.forEach(p => {
                               if (!newSelectedIds.includes(p.id)) {
                                 newSelectedIds.push(p.id);
                               }
                             });
+                            
+                            console.log('Select all checked, new selections:', newSelectedIds);
                             setLocalSelectedIds(newSelectedIds);
                           } else {
-                            setLocalSelectedIds(localSelectedIds.filter(id => 
-                              !currentProducts.some(p => p.id === id)
-                            ));
+                            // Unselect all products in current view
+                            const productIdsToRemove = currentProducts.map(p => p.id);
+                            const newSelectedIds = localSelectedIds.filter(id => 
+                              !productIdsToRemove.includes(id)
+                            );
+                            
+                            console.log('Select all unchecked, new selections:', newSelectedIds);
+                            setLocalSelectedIds(newSelectedIds);
                           }
                         }}
                         className="rounded-sm"
@@ -297,7 +307,13 @@ export default function ProductSelectionModal({
                       <tr 
                         key={product.id} 
                         className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
-                        onClick={() => handleCheckboxChange(product.id, !isSelected)}
+                        onClick={(e) => {
+                          // Prevent click handling if the click was on the checkbox itself
+                          // This prevents the double-toggling issue when clicking directly on checkbox
+                          if ((e.target as HTMLElement).tagName.toLowerCase() !== 'input') {
+                            handleCheckboxChange(product.id, !isSelected);
+                          }
+                        }}
                       >
                         <td className="p-3">
                           <Checkbox
