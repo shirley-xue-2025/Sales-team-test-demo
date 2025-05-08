@@ -27,9 +27,12 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   onProductSelectionChange
 }) => {
   
-  // Get all products that are part of combined incentives
+  // Get all products that are relevant for display
+  // If no incentives are returned but roles are selected, we should show all products
   const relevantProductIds = combinedIncentives.map(ci => ci.productId);
-  const relevantProducts = products.filter(p => relevantProductIds.includes(p.id) || selectedRoles.length === 0);
+  const relevantProducts = selectedRoles.length > 0 && relevantProductIds.length === 0 
+    ? products 
+    : products.filter(p => relevantProductIds.includes(p.id) || selectedRoles.length === 0);
   
   // State for product selection modal
   const [isProductSelectionOpen, setIsProductSelectionOpen] = useState(false);

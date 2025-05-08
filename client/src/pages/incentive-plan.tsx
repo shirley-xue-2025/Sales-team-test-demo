@@ -66,6 +66,19 @@ const IncentivePlanPage: React.FC = () => {
   const getAllProducts = useIncentiveStore(state => state.getAllProducts);
   const calculateCombinedIncentives = useIncentiveStore(state => state.calculateCombinedIncentives);
   
+  // Fetch products when component mounts
+  useEffect(() => {
+    const fetchProductsData = async () => {
+      try {
+        await useIncentiveStore.getState().fetchProducts();
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+    
+    fetchProductsData();
+  }, []);
+
   // Initialize roles from API when they load
   useEffect(() => {
     if (apiRoles?.length) {
@@ -97,6 +110,9 @@ const IncentivePlanPage: React.FC = () => {
           toggleRoleSelection(role.id);
         });
       }
+      
+      // Re-fetch products since we now have roles
+      useIncentiveStore.getState().fetchProducts();
     }
   }, [apiRoles, setRoles]);
   

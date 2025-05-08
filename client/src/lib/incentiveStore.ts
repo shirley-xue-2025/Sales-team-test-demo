@@ -161,9 +161,21 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   fetchProducts: async () => {
     try {
       set({ isLoadingProducts: true });
+      
+      console.log('Fetching products from API...');
       const products = await apiRequest<Product[]>('/api/products', {
         method: 'GET'
       });
+      
+      console.log('Products fetched:', products);
+      
+      if (!products || products.length === 0) {
+        console.warn('No products returned from API');
+        set({ isLoadingProducts: false });
+        return;
+      }
+      
+      // Set products in the store
       set({ products });
       
       // Initialize roleIncentives based on product selected status
@@ -175,30 +187,47 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       // Get all roles
       const { roles } = get();
       
+      if (!roles || roles.length === 0) {
+        console.warn('No roles in the store, skipping role products fetch');
+        set({ isLoadingProducts: false });
+        return;
+      }
+      
+      console.log('Fetching products for each role...');
+      
       // Fetch products for each role
       for (const role of roles) {
         try {
           const roleProducts = await apiRequest<Product[]>(`/api/roles/${role.id}/products`, {
             method: 'GET'
           });
+          
+          console.log(`Products for role ${role.id}:`, roleProducts);
+          
           if (roleProducts && roleProducts.length > 0) {
             roleMap[role.id] = roleProducts.map((p: Product) => p.id);
+          } else {
+            // If no products for this role, assign all products by default
+            roleMap[role.id] = products.map(p => p.id);
           }
         } catch (error) {
           console.error(`Error fetching products for role ${role.id}:`, error);
+          // On error, assign all products to the role
+          roleMap[role.id] = products.map(p => p.id);
         }
       }
+      
+      console.log('Role map:', roleMap);
       
       // Create role incentives array from the role map
       for (const [roleId, productIds] of Object.entries(roleMap)) {
-        if (productIds.length > 0) {
-          roleIncentives.push({
-            roleId: parseInt(roleId),
-            productIds
-          });
-        }
+        roleIncentives.push({
+          roleId: parseInt(roleId),
+          productIds
+        });
       }
       
+      console.log('Setting role incentives:', roleIncentives);
       set({ roleIncentives });
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -317,6 +346,12 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   calculateCombinedIncentives: () => {
     const { products, selectedRoles, roleIncentives, userMode, currentSalesRoleId } = get();
     
+    // For debug purposes
+    console.log('Calculate Combined Incentives');
+    console.log('Products:', products);
+    console.log('Selected Roles:', selectedRoles);
+    console.log('Role Incentives:', roleIncentives);
+    
     // In sales member mode, we only care about the current role
     const rolesToUse = userMode === 'sales' && currentSalesRoleId !== null 
       ? [currentSalesRoleId] 
@@ -324,25 +359,38 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     
     if (rolesToUse.length === 0) return [];
     
+    // If we have roles selected but no products loaded yet, return empty
+    if (products.length === 0) return [];
+    
     // Get all products that are selected for at least one of the selected roles
     const uniqueProductIds = new Set<string>();
     
-    rolesToUse.forEach(roleId => {
-      const roleIncentive = roleIncentives.find(ri => ri.roleId === roleId);
-      if (roleIncentive) {
-        roleIncentive.productIds.forEach(pid => {
-          // In sales mode, only add sellable products
-          const product = products.find(p => p.id === pid);
-          if (product && (userMode === 'seller' || product.isSellable)) {
-            uniqueProductIds.add(pid);
-          }
-        });
-      } else {
-        // Use default selected products
-        products.filter(p => p.selected && (userMode === 'seller' || p.isSellable))
-          .forEach(p => uniqueProductIds.add(p.id));
-      }
-    });
+    // If no role incentives are defined yet, include all products
+    if (roleIncentives.length === 0) {
+      products.forEach(p => uniqueProductIds.add(p.id));
+    } else {
+      rolesToUse.forEach(roleId => {
+        const roleIncentive = roleIncentives.find(ri => ri.roleId === roleId);
+        if (roleIncentive && roleIncentive.productIds.length > 0) {
+          roleIncentive.productIds.forEach(pid => {
+            // In sales mode, only add sellable products
+            const product = products.find(p => p.id === pid);
+            if (product && (userMode === 'seller' || product.isSellable)) {
+              uniqueProductIds.add(pid);
+            }
+          });
+        } else {
+          // If no specific products are assigned to this role, include all products
+          products.filter(p => (userMode === 'seller' || p.isSellable))
+            .forEach(p => uniqueProductIds.add(p.id));
+        }
+      });
+    }
+    
+    // If no products are found after filtering, include all products for the selected roles
+    if (uniqueProductIds.size === 0 && products.length > 0) {
+      products.forEach(p => uniqueProductIds.add(p.id));
+    }
     
     return Array.from(uniqueProductIds).map(productId => {
       const product = products.find(p => p.id === productId);

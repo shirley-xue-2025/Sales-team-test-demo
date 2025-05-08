@@ -238,6 +238,13 @@ export default function ProductSelectionModal({
           
           {/* Content scrollable area */}
           <div className="p-6 pt-0 flex-1 overflow-auto">
+            {/* Debug info for development */}
+            {products.length === 0 && (
+              <div className="mb-4 p-4 bg-yellow-50 text-yellow-800 rounded-md">
+                <strong>Debug info:</strong> No products available in the props.
+              </div>
+            )}
+            
             <div className="border rounded-md overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50 text-left sticky top-0">
@@ -270,7 +277,7 @@ export default function ProductSelectionModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {currentProducts.map((product) => (
+                  {products.length > 0 && currentProducts.map((product) => (
                     <tr key={product.id} className="hover:bg-gray-50 bg-white even:bg-gray-50">
                       <td className="p-3">
                         <Checkbox
@@ -288,7 +295,7 @@ export default function ProductSelectionModal({
                           </div>
                           <div>
                             <div className="text-sm font-medium">{product.name}</div>
-                            <div className="text-xs text-gray-500">Learn how to play piano</div>
+                            <div className="text-xs text-gray-500">Product ID: {product.id}</div>
                           </div>
                         </div>
                       </td>
@@ -310,10 +317,12 @@ export default function ProductSelectionModal({
                       </td>
                     </tr>
                   ))}
-                  {currentProducts.length === 0 && (
+                  {(currentProducts.length === 0 || products.length === 0) && (
                     <tr>
                       <td colSpan={5} className="p-4 text-center text-gray-500">
-                        No products found matching your search criteria.
+                        {products.length === 0 
+                          ? "No products available. Please add products first."
+                          : "No products found matching your search criteria."}
                       </td>
                     </tr>
                   )}
