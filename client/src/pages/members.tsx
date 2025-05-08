@@ -319,8 +319,20 @@ export default function MembersPage() {
                           disabled={roles.length <= 1}
                           onClick={() => {
                             if (roles.length > 1) {
-                              // In a real app, API call to delete would go here
-                              console.log("Deleting role:", role.id);
+                              // Confirm before deleting
+                              if (confirm(`Are you sure you want to delete the ${role.title} role?`)) {
+                                // In a real app, this would make an API call to delete the role
+                                console.log("Deleting role:", role.id);
+                                
+                                // For demonstration, we'll simulate deletion by filtering out the role
+                                const updatedRoles = roles.filter(r => r.id !== role.id);
+                                queryClient.setQueryData(['/api/roles'], updatedRoles);
+                                
+                                showToast('Role removed', {
+                                  description: `The ${role.title} role has been removed.`,
+                                  position: 'top-center',
+                                });
+                              }
                             }
                           }}
                         >
