@@ -363,7 +363,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
         open={isProductSelectionOpen}
         onOpenChange={setIsProductSelectionOpen}
         products={products}
-        selectedProductIds={relevantProductIds}
+        selectedProductIds={displayedProductIds}
         onSelectProducts={handleProductSelection}
       />
     </div>
