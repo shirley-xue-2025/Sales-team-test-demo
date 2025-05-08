@@ -85,7 +85,6 @@ export default function ProductSelectionModal({
   // Reset local selections when the modal opens
   useEffect(() => {
     if (open) {
-      console.log('Product selection modal opened with selected IDs:', selectedProductIds);
       // Create a new array to avoid reference issues
       setLocalSelectedIds([...selectedProductIds]);
       setCurrentPage(1);
@@ -93,18 +92,13 @@ export default function ProductSelectionModal({
     }
   }, [open, selectedProductIds]);
   
-  // Log for debugging purposes
+  // Dependency-free useEffect for modal opening
   useEffect(() => {
-    if (open) {
-      console.log('Product selection modal products:', products);
-      console.log('Modal selected products:', localSelectedIds);
-    }
-  }, [open, products, localSelectedIds]);
+    // No operations needed here anymore after removing logs
+  }, [open, products]);
 
   // Handle checkbox change - Only affects local state, not database
   const handleCheckboxChange = (productId: string, checked: boolean) => {
-    console.log(`Checkbox change: ${productId} => ${checked ? 'checked' : 'unchecked'}`);
-    
     // Clone the current state to avoid reference issues
     const updatedSelections = [...localSelectedIds];
     
@@ -278,7 +272,6 @@ export default function ProductSelectionModal({
                               }
                             });
                             
-                            console.log('Select all checked, new selections:', newSelectedIds);
                             setLocalSelectedIds(newSelectedIds);
                           } else {
                             // Unselect all products in current view
@@ -286,8 +279,6 @@ export default function ProductSelectionModal({
                             const newSelectedIds = localSelectedIds.filter(id => 
                               !productIdsToRemove.includes(id)
                             );
-                            
-                            console.log('Select all unchecked, new selections:', newSelectedIds);
                             setLocalSelectedIds(newSelectedIds);
                           }
                         }}
