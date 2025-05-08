@@ -1,6 +1,11 @@
 import { db } from "@db";
-import { roles, type RoleInsert, type Role } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { 
+  roles, products, roleProducts,
+  type RoleInsert, type Role,
+  type ProductInsert, type Product,
+  type RoleProductInsert
+} from "@shared/schema";
+import { and, eq, inArray } from "drizzle-orm";
 
 export const storage = {
   // Roles
@@ -59,6 +64,9 @@ export const storage = {
     // Check if this is a default role
     const roleToDelete = await storage.getRoleById(id);
     
+    // Delete all role-product associations first
+    await db.delete(roleProducts).where(eq(roleProducts.roleId, id));
+    
     // Delete the role
     await db.delete(roles).where(eq(roles.id, id));
     
@@ -86,4 +94,156 @@ export const storage = {
     
     return updatedRole;
   },
+
+  // Products
+  getAllProducts: async (): Promise<Product[]> => {
+    return await db.query.products.findMany({
+      orderBy: products.name,
+    });
+  },
+
+  getProductById: async (id: string): Promise<Product | undefined> => {
+    const result = await db.query.products.findFirst({
+      where: eq(products.id, id),
+    });
+    return result;
+  },
+
+  createProduct: async (data: ProductInsert): Promise<Product> => {
+    const [product] = await db.insert(products).values(data).returning();
+    return product;
+  },
+
+  updateProduct: async (id: string, data: Partial<ProductInsert>): Promise<Product> => {
+    const [updatedProduct] = await db
+      .update(products)
+      .set(data)
+      .where(eq(products.id, id))
+      .returning();
+    
+    return updatedProduct;
+  },
+
+  deleteProduct: async (id: string): Promise<void> => {
+    // First delete all role-product associations
+    await db.delete(roleProducts).where(eq(roleProducts.productId, id));
+    
+    // Then delete the product
+    await db.delete(products).where(eq(products.id, id));
+  },
+
+  // Role-Product Relationships
+  getProductsForRole: async (roleId: number): Promise<Product[]> => {
+    // Get all product IDs for this role
+    const roleProductRelations = await db.select({
+      productId: roleProducts.productId
+    })
+    .from(roleProducts)
+    .where(eq(roleProducts.roleId, roleId));
+    
+    const productIds = roleProductRelations.map(rp => rp.productId);
+    
+    if (productIds.length === 0) {
+      return [];
+    }
+    
+    // Get all products with these IDs
+    return await db.query.products.findMany({
+      where: inArray(products.id, productIds)
+    });
+  },
+
+  assignProductToRole: async (roleId: number, productId: string): Promise<void> => {
+    // Check if the assignment already exists
+    const existing = await db.select()
+      .from(roleProducts)
+      .where(
+        and(
+          eq(roleProducts.roleId, roleId),
+          eq(roleProducts.productId, productId)
+        )
+      );
+    
+    // Only insert if it doesn't exist yet
+    if (existing.length === 0) {
+      await db.insert(roleProducts).values({
+        roleId,
+        productId
+      });
+    }
+  },
+
+  removeProductFromRole: async (roleId: number, productId: string): Promise<void> => {
+    await db.delete(roleProducts)
+      .where(
+        and(
+          eq(roleProducts.roleId, roleId),
+          eq(roleProducts.productId, productId)
+        )
+      );
+  },
+
+  getProductsWithRoleAssignments: async (): Promise<Product[]> => {
+    // First get all products
+    const allProducts = await storage.getAllProducts();
+    
+    // Then get all role-product assignments
+    const allRoleProducts = await db.select().from(roleProducts);
+    
+    // Create a map of product IDs to role IDs
+    const productRoleMap: Record<string, number[]> = {};
+    
+    for (const rp of allRoleProducts) {
+      if (!productRoleMap[rp.productId]) {
+        productRoleMap[rp.productId] = [];
+      }
+      productRoleMap[rp.productId].push(rp.roleId);
+    }
+    
+    // Mark each product as selected if it has any role assignments
+    return allProducts.map(product => ({
+      ...product,
+      selected: Boolean(productRoleMap[product.id]?.length)
+    }));
+  },
+
+  updateProductRoleAssignments: async (
+    roleId: number, 
+    productIds: string[]
+  ): Promise<void> => {
+    // Get current assignments for this role
+    const currentAssignments = await db
+      .select({ productId: roleProducts.productId })
+      .from(roleProducts)
+      .where(eq(roleProducts.roleId, roleId));
+    
+    const currentProductIds = currentAssignments.map(a => a.productId);
+    
+    // Products to add (in productIds but not in currentProductIds)
+    const toAdd = productIds.filter(id => !currentProductIds.includes(id));
+    
+    // Products to remove (in currentProductIds but not in productIds)
+    const toRemove = currentProductIds.filter(id => !productIds.includes(id));
+    
+    // Add new assignments
+    if (toAdd.length > 0) {
+      const valuesToInsert = toAdd.map(productId => ({
+        roleId,
+        productId
+      }));
+      
+      await db.insert(roleProducts).values(valuesToInsert);
+    }
+    
+    // Remove old assignments
+    if (toRemove.length > 0) {
+      await db.delete(roleProducts)
+        .where(
+          and(
+            eq(roleProducts.roleId, roleId),
+            inArray(roleProducts.productId, toRemove)
+          )
+        );
+    }
+  }
 };
