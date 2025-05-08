@@ -104,14 +104,27 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   }, [isEditMode, newlyAddedProductIds]);
   
   // Handle product selection
-  const handleProductSelection = (selectedProductIds: string[]) => {
+  const handleProductSelection = async (selectedProductIds: string[]) => {
     if (onProductSelectionChange) {
-      // Identify newly added products
-      const newlyAdded = selectedProductIds.filter(id => !relevantProductIds.includes(id));
-      setNewlyAddedProductIds(newlyAdded);
-      
-      // Notify parent component about the selection
-      onProductSelectionChange(selectedProductIds);
+      try {
+        console.log('Product selection changed to:', selectedProductIds);
+        console.log('Previous relevant products:', relevantProductIds);
+        
+        // Identify newly added products
+        const newlyAdded = selectedProductIds.filter(id => !relevantProductIds.includes(id));
+        setNewlyAddedProductIds(newlyAdded);
+
+        // Notify parent component about the selection, which will update store and save to backend
+        await onProductSelectionChange(selectedProductIds);
+        
+        // After applying changes, close the modal to avoid confusion
+        setIsProductSelectionOpen(false);
+        
+        console.log('Product selection saved successfully');
+      } catch (error) {
+        console.error('Failed to save product selection:', error);
+        // You could add a toast notification here to inform the user of the error
+      }
     }
   };
   

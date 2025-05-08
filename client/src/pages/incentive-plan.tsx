@@ -119,28 +119,35 @@ const IncentivePlanPage: React.FC = () => {
   // Simple event handlers
   const handleEditClick = () => setIsEditMode(prev => !prev);
   
-  const handleProductSelectionChange = (productIds: string[]) => {
-    // Calculate what's added and removed
-    const currentSelectedIds = products.filter(p => p.selected).map(p => p.id);
-    const added = productIds.filter(id => !currentSelectedIds.includes(id));
-    const removed = currentSelectedIds.filter(id => !productIds.includes(id));
-    
-    // Apply the changes
-    added.forEach(id => {
-      if (selectedRoles.length > 0) {
-        toggleProductSelection(id, selectedRoles[0], true);
+  const handleProductSelectionChange = async (productIds: string[]) => {
+    try {
+      console.log('Product selection change handler called with:', productIds);
+      
+      // If no roles are selected, we can't assign products
+      if (selectedRoles.length === 0) {
+        console.warn('No roles selected, cannot assign products');
+        return;
       }
-    });
-    
-    removed.forEach(id => {
-      selectedRoles.forEach(roleId => {
-        toggleProductSelection(id, roleId, false);
-      });
-    });
-    
-    // Set edit mode if adding new products
-    if (added.length > 0 && !isEditMode) {
-      setIsEditMode(true);
+      
+      // Update all selected roles with the new product selection
+      for (const roleId of selectedRoles) {
+        console.log(`Updating products for role ${roleId} with:`, productIds);
+        
+        // Use the store's updateRoleProducts method to save to backend
+        await useIncentiveStore.getState().updateRoleProducts(roleId, productIds);
+      }
+      
+      // Set edit mode if adding new products
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
+      
+      // Refresh the products data to ensure UI is in sync with backend
+      await useIncentiveStore.getState().fetchProducts();
+      
+      console.log('Product selection updated successfully');
+    } catch (error) {
+      console.error('Failed to update product selection:', error);
     }
   };
   

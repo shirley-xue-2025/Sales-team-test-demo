@@ -85,11 +85,20 @@ export default function ProductSelectionModal({
   // Reset local selections when the modal opens
   useEffect(() => {
     if (open) {
+      console.log('Product selection modal opened with selected IDs:', selectedProductIds);
       setLocalSelectedIds(selectedProductIds);
       setCurrentPage(1);
       setSearchQuery('');
     }
   }, [open, selectedProductIds]);
+  
+  // Log for debugging purposes
+  useEffect(() => {
+    if (open) {
+      console.log('Product selection modal products:', products);
+      console.log('Modal selected products:', localSelectedIds);
+    }
+  }, [open, products, localSelectedIds]);
 
   // Handle checkbox change
   const handleCheckboxChange = (productId: string, checked: boolean) => {

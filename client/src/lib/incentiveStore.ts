@@ -69,6 +69,8 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   setMode: (mode) => set({ mode }),
   
   toggleProductSelection: async (productId, roleId, selected) => {
+    console.log(`Toggle product ${productId} for role ${roleId} to ${selected}`);
+    
     // First update the local state for immediate feedback
     const { roleIncentives, products } = get();
     let updatedIncentives = [...roleIncentives];
@@ -100,17 +102,27 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       });
     }
     
+    // Update local state first for immediate feedback
     set({ roleIncentives: updatedIncentives });
     
     // Then update the database
     try {
       set({ isUpdatingProducts: true });
       
-      // Get all product IDs for this role
-      const productIds = get().getSelectedProductsForRole(roleId).map(p => p.id);
+      // Get all product IDs for this role after our local state update
+      const roleIncentive = updatedIncentives.find(ri => ri.roleId === roleId);
+      const productIds = roleIncentive ? roleIncentive.productIds : [];
+      
+      console.log(`Saving product selection to backend for role ${roleId}:`, productIds);
       
       // Send the update to the backend
-      await get().updateRoleProducts(roleId, productIds);
+      await apiRequest(`/api/roles/${roleId}/products`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productIds })
+      });
       
       // Update the selected status of the product in the products array
       const updatedProducts = products.map(p => 
@@ -120,8 +132,15 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       );
       
       set({ products: updatedProducts });
+      
+      // Refresh products for this role to ensure consistency
+      await get().fetchRoleProducts(roleId);
+      
+      console.log('Product selection saved successfully');
     } catch (error) {
       console.error('Error updating product selection:', error);
+      // Revert local changes on error
+      await get().fetchRoleProducts(roleId);
     } finally {
       set({ isUpdatingProducts: false });
     }
@@ -275,7 +294,11 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   updateRoleProducts: async (roleId, productIds) => {
     try {
-      await apiRequest('/api/roles/' + roleId + '/products', {
+      set({ isUpdatingProducts: true });
+      console.log(`Updating products for role ${roleId} with:`, productIds);
+      
+      // Send update to backend
+      const updatedProducts = await apiRequest('/api/roles/' + roleId + '/products', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -283,10 +306,35 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         body: JSON.stringify({ productIds })
       });
       
-      // Refresh products for this role
+      console.log(`Backend returned updated products for role ${roleId}:`, updatedProducts);
+      
+      // Update local state with the new product IDs for this role
+      const roleIncentives = get().roleIncentives;
+      const updatedIncentives = [...roleIncentives];
+      const existingIndex = updatedIncentives.findIndex(ri => ri.roleId === roleId);
+      
+      if (existingIndex >= 0) {
+        updatedIncentives[existingIndex] = {
+          ...updatedIncentives[existingIndex],
+          productIds
+        };
+      } else if (productIds.length > 0) {
+        updatedIncentives.push({
+          roleId,
+          productIds
+        });
+      }
+      
+      set({ roleIncentives: updatedIncentives });
+      console.log('Updated roleIncentives:', updatedIncentives);
+      
+      // Refresh products for this role to ensure consistency
       await get().fetchRoleProducts(roleId);
+      
+      set({ isUpdatingProducts: false });
     } catch (error) {
       console.error(`Error updating products for role ${roleId}:`, error);
+      set({ isUpdatingProducts: false });
       throw error;
     }
   },
