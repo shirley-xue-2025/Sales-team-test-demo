@@ -66,10 +66,11 @@ const IncentivePlanPage: React.FC = () => {
   const getAllProducts = useIncentiveStore(state => state.getAllProducts);
   const calculateCombinedIncentives = useIncentiveStore(state => state.calculateCombinedIncentives);
   
-  // Fetch products when component mounts
+  // Fetch products when component mounts and on page refresh
   useEffect(() => {
     const fetchProductsData = async () => {
       try {
+        console.log('Fetching initial products data from server');
         await useIncentiveStore.getState().fetchProducts();
       } catch (error) {
         console.error('Failed to fetch products:', error);
@@ -77,6 +78,19 @@ const IncentivePlanPage: React.FC = () => {
     };
     
     fetchProductsData();
+    
+    // Also fetch products data when window is focused/refocused
+    // This helps keep the UI in sync with server state after page refresh
+    const handleFocus = () => {
+      console.log('Window focused, refreshing products data');
+      fetchProductsData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Initialize roles from API when they load

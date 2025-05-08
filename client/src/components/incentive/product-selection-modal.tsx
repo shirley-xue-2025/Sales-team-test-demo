@@ -100,19 +100,13 @@ export default function ProductSelectionModal({
     }
   }, [open, products, localSelectedIds]);
 
-  // Handle checkbox change
+  // Handle checkbox change - Only affects local state, not database
   const handleCheckboxChange = (productId: string, checked: boolean) => {
     if (checked) {
+      // Just update local UI state, don't save to backend yet
       setLocalSelectedIds(prev => [...prev, productId]);
     } else {
-      // If deselecting a product that was previously selected, show warning
-      if (selectedProductIds.includes(productId)) {
-        const productToRemove = products.find(p => p.id === productId);
-        if (productToRemove) {
-          setProductsToRemove([productToRemove]);
-          setShowWarning(true);
-        }
-      }
+      // Just update local UI state, don't save to backend yet
       setLocalSelectedIds(prev => prev.filter(id => id !== productId));
     }
   };
@@ -340,21 +334,23 @@ export default function ProductSelectionModal({
             </div>
           </div>
           
-          {/* Fixed action buttons area */}
-          <div className="flex justify-between items-center p-4 border-t bg-white">
-            <Button 
-              variant="outline" 
-              onClick={handleCancel}
-              className="rounded-full px-6"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSave}
-              className="bg-black hover:bg-gray-800 text-white rounded-full px-6"
-            >
-              Select ({selectionCount})
-            </Button>
+          {/* Fixed action buttons area - Both buttons together on the right */}
+          <div className="flex justify-end items-center p-4 border-t bg-white">
+            <div className="space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                className="rounded-full px-6"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave}
+                className="bg-black hover:bg-gray-800 text-white rounded-full px-6"
+              >
+                Select ({selectionCount})
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

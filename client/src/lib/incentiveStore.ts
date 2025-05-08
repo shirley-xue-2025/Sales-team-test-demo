@@ -297,14 +297,18 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       set({ isUpdatingProducts: true });
       console.log(`Updating products for role ${roleId} with:`, productIds);
       
-      // Send update to backend
+      // Send update to backend - ensure this completes successfully
       const updatedProducts = await apiRequest('/api/roles/' + roleId + '/products', {
-        method: 'PUT',
+        method: 'PUT', 
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ productIds })
       });
+      
+      if (!updatedProducts) {
+        throw new Error(`Failed to update products for role ${roleId}`);
+      }
       
       console.log(`Backend returned updated products for role ${roleId}:`, updatedProducts);
       
@@ -316,25 +320,43 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       if (existingIndex >= 0) {
         updatedIncentives[existingIndex] = {
           ...updatedIncentives[existingIndex],
-          productIds
+          productIds: [...productIds] // Make a copy to avoid reference issues
         };
       } else if (productIds.length > 0) {
         updatedIncentives.push({
           roleId,
-          productIds
+          productIds: [...productIds] // Make a copy to avoid reference issues
         });
       }
       
       set({ roleIncentives: updatedIncentives });
-      console.log('Updated roleIncentives:', updatedIncentives);
+      console.log('Updated roleIncentives in local state:', updatedIncentives);
       
-      // Refresh products for this role to ensure consistency
+      // Mark products as selected/unselected in the products array
+      const allProducts = get().products;
+      const updatedProducts2 = allProducts.map(product => {
+        const isSelected = productIds.includes(product.id);
+        return { ...product, selected: isSelected };
+      });
+      
+      set({ products: updatedProducts2 });
+      
+      // Refresh products for this role from the server to ensure consistency
       await get().fetchRoleProducts(roleId);
       
       set({ isUpdatingProducts: false });
+      return updatedProducts;
     } catch (error) {
       console.error(`Error updating products for role ${roleId}:`, error);
       set({ isUpdatingProducts: false });
+      
+      // Re-fetch products from server to ensure consistency after an error
+      try {
+        await get().fetchProducts();
+      } catch (fetchError) {
+        console.error('Failed to refresh products after error:', fetchError);
+      }
+      
       throw error;
     }
   },
