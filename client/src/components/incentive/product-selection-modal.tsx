@@ -98,28 +98,27 @@ export default function ProductSelectionModal({
   }, [open, products]);
 
   // Handle checkbox change - Only affects local state, not database
-  const handleCheckboxChange = (productId: string, checked: boolean) => {
-    // Clone the current state to avoid reference issues
-    const updatedSelections = [...localSelectedIds];
-    const currentlySelected = updatedSelections.includes(productId);
+  const handleCheckboxChange = React.useCallback((productId: string, checked: boolean) => {
+    console.log(`[ProductSelectionModal] handleCheckboxChange called with:`, { productId, checked });
     
-    // If checkbox state doesn't match our current selection state, update it
-    if (checked !== currentlySelected) {
+    // Always perform this operation directly to ensure state updates
+    setLocalSelectedIds(prevSelections => {
       if (checked) {
-        // Add the product if it's not already selected
-        updatedSelections.push(productId);
+        // Add the product if not already selected
+        if (!prevSelections.includes(productId)) {
+          console.log(`[ProductSelectionModal] Adding product ${productId} to selections`);
+          return [...prevSelections, productId];
+        }
       } else {
-        // Remove the product if it's currently selected
-        const index = updatedSelections.indexOf(productId);
-        if (index !== -1) {
-          updatedSelections.splice(index, 1);
+        // Remove the product if currently selected
+        if (prevSelections.includes(productId)) {
+          console.log(`[ProductSelectionModal] Removing product ${productId} from selections`);
+          return prevSelections.filter(id => id !== productId);
         }
       }
-      
-      // Update state with the new selections
-      setLocalSelectedIds(updatedSelections);
-    }
-  };
+      return prevSelections; // No change needed
+    });
+  }, []);
 
   // Handle save button click
   const handleSave = () => {
@@ -263,26 +262,41 @@ export default function ProductSelectionModal({
                         name="select-all-checkbox"
                         checked={currentProducts.length > 0 && currentProducts.every(p => localSelectedIds.includes(p.id))}
                         onCheckedChange={(checked) => {
-                          if (checked) {
-                            // Select all products in current view
-                            const newSelectedIds = [...localSelectedIds];
-                            
-                            // Add all products from current page
-                            currentProducts.forEach(p => {
-                              if (!newSelectedIds.includes(p.id)) {
-                                newSelectedIds.push(p.id);
-                              }
-                            });
-                            
-                            setLocalSelectedIds(newSelectedIds);
-                          } else {
-                            // Unselect all products in current view
-                            const productIdsToRemove = currentProducts.map(p => p.id);
-                            const newSelectedIds = localSelectedIds.filter(id => 
-                              !productIdsToRemove.includes(id)
-                            );
-                            setLocalSelectedIds(newSelectedIds);
-                          }
+                          console.log("[ProductSelectionModal] Select All onCheckedChange:", checked);
+                          const isChecked = !!checked;
+                          
+                          // Explicitly update with a function to ensure we have the latest state
+                          setLocalSelectedIds(prevSelections => {
+                            if (isChecked) {
+                              // Select all products in current view
+                              const newSelectedIds = [...prevSelections];
+                              
+                              // Add all products from current page
+                              currentProducts.forEach(p => {
+                                if (!newSelectedIds.includes(p.id)) {
+                                  newSelectedIds.push(p.id);
+                                }
+                              });
+                              
+                              console.log("[ProductSelectionModal] Selecting all products:", 
+                                currentProducts.map(p => p.id), 
+                                "New selections:", newSelectedIds);
+                              
+                              return newSelectedIds;
+                            } else {
+                              // Unselect all products in current view
+                              const productIdsToRemove = currentProducts.map(p => p.id);
+                              const newSelectedIds = prevSelections.filter(id => 
+                                !productIdsToRemove.includes(id)
+                              );
+                              
+                              console.log("[ProductSelectionModal] Unselecting all products:", 
+                                productIdsToRemove,
+                                "New selections:", newSelectedIds);
+                              
+                              return newSelectedIds;
+                            }
+                          });
                         }}
                         className="rounded-sm"
                       />
@@ -321,9 +335,21 @@ export default function ProductSelectionModal({
                             name={`product-${product.id}`}
                             checked={isSelected}
                             onCheckedChange={(checked) => {
-                              // Using explicit boolean conversion with !! and add console logging for debugging
+                              console.log(`[ProductSelectionModal] Checkbox ${product.id} clicked, current state:`, 
+                                { isSelected, newState: checked });
+                                
+                              // Using explicit boolean conversion with !! for consistent boolean values
                               const isChecked = !!checked;
-                              handleCheckboxChange(product.id, isChecked);
+                              
+                              // Log the exact value received by our component  
+                              console.log(`[ProductSelectionModal] Product ${product.id} changing from ${isSelected} to ${isChecked}`);
+                              
+                              // Force opposite state if they're the same (indicating a toggle failure)
+                              const finalState = isSelected === isChecked ? !isSelected : isChecked;
+                              console.log(`[ProductSelectionModal] Final state for ${product.id}: ${finalState}`);
+                              
+                              // Apply the change
+                              handleCheckboxChange(product.id, finalState);
                             }}
                             className="rounded-sm"
                           />
