@@ -31,11 +31,11 @@ const DeleteRoleDialog: React.FC<DeleteRoleDialogProps> = ({
       <AlertDialogContent className="max-w-[500px] rounded-sm">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-medium">
-            Remove {role.title} Role
+            Remove {role.title} Role?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base text-gray-600 mt-2">
-            Are you sure you want to remove this role? This action will permanently 
-            delete the role from your organization.
+            This will permanently remove the "{role.title}" role from your organization.
+            Any team members with this role will need to be reassigned.
             {role.memberCount && role.memberCount > 0 ? (
               <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">
                 <div className="flex gap-2 items-center">

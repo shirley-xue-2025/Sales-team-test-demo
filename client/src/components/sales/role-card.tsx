@@ -59,8 +59,8 @@ const RoleCard = ({
   ) : null;
 
   return (
-    <Card className="overflow-hidden border border-gray-200 rounded-sm shadow-sm flex flex-col">
-      <CardContent className="p-5 border-b border-gray-200 flex-grow">
+    <Card className="overflow-hidden border border-gray-200 rounded-sm shadow-sm flex flex-col h-full">
+      <CardContent className="p-5 border-b border-gray-200 flex flex-col flex-grow">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <h4 className="text-md font-medium text-gray-900">{role.title}</h4>
@@ -135,11 +135,11 @@ const RoleCard = ({
             </DropdownMenu>
           </div>
         </div>
-        <p className="mt-2 text-sm text-gray-600">{role.description}</p>
+        <p className="mt-2 text-sm text-gray-600 flex-grow">{role.description}</p>
       </CardContent>
       
       {/* Member count button in separate div at bottom */}
-      <div className="px-5 py-3 border-t border-gray-200 bg-gray-50">
+      <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 mt-auto">
         <button
           onClick={handleMemberCountClick}
           className="text-xs text-gray-500 hover:text-gray-700 flex items-center"

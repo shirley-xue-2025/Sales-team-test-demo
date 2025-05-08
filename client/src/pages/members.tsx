@@ -90,8 +90,30 @@ export default function MembersPage() {
   };
   
   const handleFormSubmit = (data: RoleInsert) => {
-    createRoleMutation.mutate(data);
+    if (selectedRole) {
+      // Update existing role
+      console.log("Updating role:", selectedRole.id, data);
+      // Call the API to update the role
+      apiRequest('PUT', `/api/roles/${selectedRole.id}`, data)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+          showToast('Role updated successfully', {
+            description: 'The role has been updated in the system.',
+            position: 'top-center',
+          });
+        })
+        .catch(error => {
+          showToast('Failed to update role', {
+            description: error.message || 'An error occurred while updating the role.',
+            position: 'top-center',
+          });
+        });
+    } else {
+      // Create new role
+      createRoleMutation.mutate(data);
+    }
     setRoleFormOpen(false);
+    setSelectedRole(undefined);
   };
 
   return (
