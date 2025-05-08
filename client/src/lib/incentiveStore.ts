@@ -3,16 +3,16 @@ import { Product, Role, RoleIncentive, CombinedIncentive } from './types';
 
 // Realistic coaching product names with proper Euro symbol for bonuses
 const mockProducts: Product[] = [
-  { id: "352041", name: "1-on-1 Strategy Session", created: "08.01.2024", commission: "20%", bonus: "5€", selected: true },
-  { id: "349274", name: "Business Growth Masterclass", created: "20.12.2023", commission: "20%", bonus: "10€", selected: true },
-  { id: "302985", name: "Leadership Coaching Program", created: "04.05.2023", commission: "15%", bonus: "15€", selected: true },
-  { id: "302984", name: "Sales Acceleration Workshop", created: "04.06.2023", commission: "10%", bonus: "20€", selected: false },
-  { id: "445504", name: "Marketing Mindset Course", created: "—", commission: "15%", bonus: "5€", selected: false },
-  { id: "443939", name: "CEO Mentoring Package", created: "—", commission: "25%", bonus: "25€", selected: false },
-  { id: "441233", name: "Social Media Authority Program", created: "—", commission: "20%", bonus: "15€", selected: false },
-  { id: "123456", name: "Email Marketing Mastery", created: "15.02.2024", commission: "10%", bonus: "5€", selected: true },
-  { id: "234567", name: "Client Acquisition System", created: "22.03.2024", commission: "25%", bonus: "10€", selected: true },
-  { id: "345678", name: "Business Scaling Blueprint", created: "10.01.2024", commission: "30%", bonus: "15€", selected: true },
+  { id: "352041", name: "1-on-1 Strategy Session", created: "08.01.2024", commission: "20%", bonus: "5€", price: "499€", isSellable: true, selected: true },
+  { id: "349274", name: "Business Growth Masterclass", created: "20.12.2023", commission: "20%", bonus: "10€", price: "1299€", isSellable: true, selected: true },
+  { id: "302985", name: "Leadership Coaching Program", created: "04.05.2023", commission: "15%", bonus: "15€", price: "2499€", isSellable: true, selected: true },
+  { id: "302984", name: "Sales Acceleration Workshop", created: "04.06.2023", commission: "10%", bonus: "20€", price: "799€", isSellable: false, selected: false },
+  { id: "445504", name: "Marketing Mindset Course", created: "—", commission: "15%", bonus: "5€", price: "299€", isSellable: true, selected: false },
+  { id: "443939", name: "CEO Mentoring Package", created: "—", commission: "25%", bonus: "25€", price: "4999€", isSellable: true, selected: false },
+  { id: "441233", name: "Social Media Authority Program", created: "—", commission: "20%", bonus: "15€", price: "899€", isSellable: false, selected: false },
+  { id: "123456", name: "Email Marketing Mastery", created: "15.02.2024", commission: "10%", bonus: "5€", price: "399€", isSellable: true, selected: true },
+  { id: "234567", name: "Client Acquisition System", created: "22.03.2024", commission: "25%", bonus: "10€", price: "1999€", isSellable: true, selected: true },
+  { id: "345678", name: "Business Scaling Blueprint", created: "10.01.2024", commission: "30%", bonus: "15€", price: "2999€", isSellable: true, selected: true },
 ];
 
 interface IncentiveStore {

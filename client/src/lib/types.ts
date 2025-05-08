@@ -5,6 +5,8 @@ export interface Product {
   created: string;
   commission: string;
   bonus: string;
+  price?: string; // Price of the product
+  isSellable?: boolean; // Whether the product is sellable
   selected?: boolean; // Flag to track if product is selected for a role
 }
 

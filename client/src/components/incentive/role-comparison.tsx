@@ -186,7 +186,9 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            <th className="px-4 py-3 w-1/4" rowSpan={2}>Product</th>
+            <th className="px-4 py-3" rowSpan={2}>Product</th>
+            <th className="px-2 py-3 text-center" rowSpan={2}>Price</th>
+            <th className="px-2 py-3 text-center" rowSpan={2}>Sellable</th>
             
             {selectedRoles.map(roleId => {
               const role = roles.find(r => r.id === roleId);
@@ -204,10 +206,10 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             {selectedRoles.map(roleId => (
-              <>
-                <th key={`comm-${roleId}`} className="px-2 py-3 text-center w-20">Comm. %</th>
-                <th key={`bonus-${roleId}`} className="px-2 py-3 text-center w-20">Bonus €</th>
-              </>
+              <React.Fragment key={`header-${roleId}`}>
+                <th className="px-2 py-3 text-center w-20">Comm. %</th>
+                <th className="px-2 py-3 text-center w-20">Bonus €</th>
+              </React.Fragment>
             ))}
             
             <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600 border-l border-gray-200">Comm. %</th>
@@ -226,10 +228,46 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                   {product.name}
                   {isNewlyAdded && <span className="ml-2 text-xs text-green-600">(New)</span>}
                 </td>
+                <td className="px-2 py-2 text-sm text-center text-gray-600 font-medium">
+                  {product.price || "N/A"}
+                </td>
+                <td className="px-2 py-2 text-center">
+                  {product.isSellable ? (
+                    <div className="flex items-center justify-center">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5 text-green-500" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5 text-gray-300" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </td>
                 
                 {selectedRoles.map((roleId, roleIndex) => (
-                  <>
-                    <td key={`comm-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
+                  <React.Fragment key={`role-${roleId}-${product.id}`}>
+                    <td className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
                         <Input
                           type="text"
@@ -242,7 +280,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                         getCellValue(product, roleId, 'commission')
                       )}
                     </td>
-                    <td key={`bonus-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
+                    <td className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
                         <Input
                           type="text"
@@ -254,7 +292,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                         getCellValue(product, roleId, 'bonus')
                       )}
                     </td>
-                  </>
+                  </React.Fragment>
                 ))}
                 
                 <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50 border-l border-gray-200">
@@ -269,7 +307,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           
           {relevantProducts.length === 0 && (
             <tr>
-              <td colSpan={selectedRoles.length * 2 + 3} className="p-8 text-center text-gray-500">
+              <td colSpan={selectedRoles.length * 2 + 5} className="p-8 text-center text-gray-500">
                 {selectedRoles.length === 0 
                   ? "Select at least one role to see comparison data." 
                   : "No products available for the selected roles."}
