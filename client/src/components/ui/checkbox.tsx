@@ -8,30 +8,7 @@ const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
 >(({ className, onCheckedChange, checked, ...props }, ref) => {
-  // Track internal checked state with a ref to detect changes
-  const prevCheckedRef = React.useRef(checked);
-  
-  // Force re-render when props.checked changes from parent
-  React.useEffect(() => {
-    prevCheckedRef.current = checked;
-  }, [checked]);
-
-  // Enhanced handler to log and process checked changes
-  const handleCheckedChange = React.useCallback((newChecked: CheckboxPrimitive.CheckedState) => {
-    console.log("[Checkbox] onCheckedChange called with:", newChecked, "previous was:", prevCheckedRef.current);
-    
-    // Ensure the state change is processed by the parent
-    if (onCheckedChange) {
-      // Force the opposite of the current value to ensure toggle
-      const forcedValue = typeof checked === 'boolean' && newChecked === checked 
-        ? !checked
-        : newChecked;
-        
-      console.log("[Checkbox] Passing value to parent:", forcedValue);
-      onCheckedChange(forcedValue);
-    }
-  }, [onCheckedChange, checked]);
-
+  // Simple passthrough without any complex logic that could cause issues
   return (
     <CheckboxPrimitive.Root
       ref={ref}
@@ -40,7 +17,7 @@ const Checkbox = React.forwardRef<
         className
       )}
       checked={checked}
-      onCheckedChange={handleCheckedChange}
+      onCheckedChange={onCheckedChange}
       {...props}
     >
       <CheckboxPrimitive.Indicator

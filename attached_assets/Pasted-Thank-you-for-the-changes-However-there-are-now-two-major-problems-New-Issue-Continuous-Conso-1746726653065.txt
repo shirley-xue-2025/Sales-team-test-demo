@@ -1,0 +1,39 @@
+Thank you for the changes. However, there are now two major problems:
+
+
+
+New Issue: Continuous Console Logging & Likely Re-render Loop:
+
+After your latest update, the browser console is continuously flooded with messages like [ProductSelectionModal] Rendering row for ID: [product-id] with isSelected: [true/false] for all products, even without any user interaction.
+
+This indicates a probable infinite re-render loop or excessively frequent updates in ProductSelectionModal.tsx.
+
+This started after changes to the key prop for ProductRow (it now includes isSelected and possibly a localStateKey). Please investigate and fix this render loop first, as it makes the application unusable. The key for list items should generally be stable and unique to the item itself, not based on its selection state.
+
+Persistent Issue: Checkbox Unselection Still Not Working in UI:
+
+Despite the console logs (from previous versions) showing that the internal list of selected IDs was updating when a checkbox was clicked, the UI (the checkbox itself, the 'Select (X)' button, and the new 'Selected count: X' display you added) does not update to reflect the deselection.
+
+The checkbox blinks but remains visually checked.
+
+Regarding the checkbox.tsx component:
+
+
+
+The logic with forcedValue seems overly complex and might be a symptom of the underlying state propagation or component update problem. Ideally, a controlled React checkbox should work by correctly receiving its checked prop from the parent and calling its onCheckedChange (or similar) prop with the new state.
+
+Please prioritize the following:
+
+
+
+Fix the continuous re-render loop in ProductSelectionModal.tsx. Ensure that rendering only happens when necessary (e.g., when the actual product data or selection state changes). The key prop for items in a list should be stable and tied to the product's unique ID.
+
+Once the rendering is stable, address the UI update issue for checkboxes:Ensure that when toggleProduct (or the equivalent function in useProductSelection) updates the state of selected products, ProductSelectionModal.tsx receives this new state.
+
+Confirm that ProductSelectionModal.tsx correctly calculates the isSelected prop for each ProductRow/Checkbox.
+
+Ensure the Checkbox.tsx component correctly displays its visual state based on the checked prop it receives and reliably calls its onCheckedChange (or equivalent) prop when clicked, which should then trigger the state update in useProductSelection.
+
+The new "Selected count: X" display you added should also update based on the actual number of selected products.
+
+Please provide the updated code for product-selection-modal.tsx, checkbox.tsx, and the relevant parts of useProductSelection.ts (or equivalent state logic file) once these issues are addressed."

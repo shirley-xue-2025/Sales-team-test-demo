@@ -28,7 +28,7 @@ const ProductRow = React.memo(({
   isSelected: boolean; 
   onToggle: (productId: string, selected: boolean) => void;
 }) => {
-  console.log(`[ProductRow] Rendering row for ${product.id}, isSelected=${isSelected}`);
+  // Removed excessive logging
 
   const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
     // Prevent click handling if the click was on or inside the checkbox itself
@@ -40,22 +40,20 @@ const ProductRow = React.memo(({
       target.tagName.toLowerCase() === 'path';
       
     if (!isCheckboxOrChild) {
-      console.log(`[ProductRow] Row click detected for ${product.id}, toggling from ${isSelected} to ${!isSelected}`);
+      // Toggle the selection directly through the parent handler
       onToggle(product.id, !isSelected);
     }
   }, [product.id, isSelected, onToggle]);
 
   const handleCheckboxChange = useCallback((checked: boolean | 'indeterminate') => {
-    console.log(`[ProductRow] Checkbox clicked for ${product.id}:`, checked);
+    // Simple direct conversion from checkbox state to boolean
     const finalChecked = checked === 'indeterminate' ? false : !!checked;
     
-    // Important: If the incoming state matches current state but we're clicking to toggle,
-    // force the opposite value to ensure the change happens
-    const newState = isSelected === finalChecked ? !isSelected : finalChecked;
-    console.log(`[ProductRow] Setting ${product.id} to ${newState}`);
-    
-    onToggle(product.id, newState);
-  }, [product.id, isSelected, onToggle]);
+    // If isSelected is true and we're toggling, pass false
+    // If isSelected is false and we're toggling, pass true
+    // this ensures we always toggle the actual state
+    onToggle(product.id, finalChecked);
+  }, [product.id, onToggle]);
 
   return (
     <tr 
@@ -185,24 +183,29 @@ export default function ProductSelectionModal({
 
   // Handle checkbox change - Only affects local state, not database
   const handleProductToggle = useCallback((productId: string, checked: boolean) => {
-    console.log(`[ProductSelectionModal] handleProductToggle called for ${productId}, checked=${checked}`);
-    
-    // Always perform this operation directly to ensure state updates
+    // Simplified toggle logic - create brand new array each time to ensure state updates
     setLocalSelectedIds(prevSelections => {
+      // Get current selection state
       const isCurrentlySelected = prevSelections.includes(productId);
       
-      // If current state matches desired state, no changes needed
+      // If value is already in the desired state, don't change
       if ((isCurrentlySelected && checked) || (!isCurrentlySelected && !checked)) {
-        return prevSelections;
+        // Make a copy to ensure reference changes for React
+        return [...prevSelections]; 
       }
       
-      // Create new array to ensure React detects the change
+      // Create a brand new array to ensure React detects the state change
       if (checked) {
+        // Add the ID (selection)
         return [...prevSelections, productId];
       } else {
+        // Remove the ID (deselection)
         return prevSelections.filter(id => id !== productId);
       }
     });
+    
+    // Force an update to localStateKey to ensure child components re-render
+    setLocalStateKey(prev => prev + 1);
   }, []);
 
   // Handle select/deselect all on current page
@@ -287,15 +290,11 @@ export default function ProductSelectionModal({
   const allCurrentSelected = currentProducts.length > 0 && 
     currentProducts.every(p => localSelectedIds.includes(p.id));
 
-  // Debug current state
-  console.log(`[ProductSelectionModal] Rendering with localSelectedIds:`, localSelectedIds);
-  console.log(`[ProductSelectionModal] Selectable products:`, currentProducts);
-  
-  // Force React to re-render this component when localSelectedIds changes
-  // by including the key in the dependency array
-  React.useEffect(() => {
-    console.log(`[ProductSelectionModal] Selection state changed, localSelectedIds:`, localSelectedIds);
-  }, [localSelectedIds, localStateKey]);
+  // Only log on dev builds and not on every render
+  if (process.env.NODE_ENV !== 'production' && localSelectedIds.length > 0) {
+    // We only want to log this when debugging specific issues, not on every render
+    // console.log(`[ProductSelectionModal] Current selection:`, localSelectedIds.length);
+  }
 
   return (
     <>
@@ -410,7 +409,7 @@ export default function ProductSelectionModal({
                     // Render individual product row with memoization for performance
                     return (
                       <ProductRow
-                        key={`product-row-${product.id}-${isSelected ? 'selected' : 'unselected'}-${localStateKey}`}
+                        key={`product-row-${product.id}`}
                         product={product}
                         isSelected={isSelected}
                         onToggle={handleProductToggle}
