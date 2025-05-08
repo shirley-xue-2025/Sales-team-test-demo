@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Role, Product, CombinedIncentive } from '@/lib/types';
 import ProductSelectionModal from './product-selection-modal';
+import { useIncentiveStore } from '@/lib/incentiveStore';
 
 interface RoleComparisonProps {
   roles: Role[];
@@ -26,6 +27,9 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   onEditClick,
   onProductSelectionChange
 }) => {
+  // Get the user mode from the store
+  const { userMode, currentSalesRoleId } = useIncentiveStore();
+  
   // Get all products that are part of combined incentives
   const relevantProductIds = combinedIncentives.map(ci => ci.productId);
   const relevantProducts = products.filter(p => relevantProductIds.includes(p.id) || selectedRoles.length === 0);
@@ -123,65 +127,87 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
     return type === 'commission' ? product.commission : product.bonus;
   };
   
+  // Check if we're viewing this in sales member mode with a specific role
+  const isSalesMemberView = userMode === 'sales' && currentSalesRoleId !== null;
+  
+  // Get the currently selected sales role for display
+  const currentRole = isSalesMemberView ? roles.find(r => r.id === currentSalesRoleId) : null;
+  
+  // Create an array of roles to show in the header - if in sales member view, only show that role
+  const displayRoles = isSalesMemberView 
+    ? (currentRole ? [currentRole] : []) 
+    : roles.filter(role => selectedRoles.includes(role.id));
+  
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-lg font-medium text-gray-800">Team incentive overview</h2>
-        <div className="flex space-x-2">
-          <Button 
-            onClick={() => setIsProductSelectionOpen(true)}
-            variant="outline"
-            className="rounded-sm border-gray-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-            </svg>
-            Change products
-          </Button>
-          
-          <Button 
-            onClick={onEditClick}
-            className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
-          >
-            {isEditMode ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                Save changes
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Edit incentives
-              </>
+        <h2 className="text-lg font-medium text-gray-800">
+          {isSalesMemberView ? 'Available Products & Incentives' : 'Team incentive overview'}
+        </h2>
+        
+        {/* Only show action buttons in seller mode */}
+        {userMode === 'seller' && (
+          <div className="flex space-x-2">
+            <Button 
+              onClick={() => setIsProductSelectionOpen(true)}
+              variant="outline"
+              className="rounded-sm border-gray-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+              </svg>
+              Change products
+            </Button>
+            
+            {onEditClick && (
+              <Button 
+                onClick={onEditClick}
+                className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
+              >
+                {isEditMode ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                      <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save changes
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit incentives
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
       
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Select roles to compare:</h3>
-        <div className="flex flex-wrap gap-3">
-          {roles.map(role => (
-            <label key={role.id} className="flex items-center space-x-2">
-              <Checkbox 
-                checked={selectedRoles.includes(role.id)} 
-                onCheckedChange={() => onRoleSelectionChange(role.id)}
-                className="rounded-sm"
-              />
-              <span className="text-sm font-medium text-gray-700">{role.title}</span>
-            </label>
-          ))}
+      {/* Role selection section - only show in seller mode */}
+      {userMode === 'seller' && (
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Select roles to compare:</h3>
+          <div className="flex flex-wrap gap-3">
+            {roles.map(role => (
+              <label key={role.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={selectedRoles.includes(role.id)} 
+                  onCheckedChange={() => onRoleSelectionChange(role.id)}
+                  className="rounded-sm"
+                />
+                <span className="text-sm font-medium text-gray-700">{role.title}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -190,28 +216,46 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
             <th className="px-2 py-3 text-center" rowSpan={2}>Price</th>
             <th className="px-2 py-3 text-center" rowSpan={2}>Sellable</th>
             
-            {selectedRoles.map(roleId => {
-              const role = roles.find(r => r.id === roleId);
-              return (
-                <th key={roleId} className="px-2 py-3 text-center border-b-0" colSpan={2}>
-                  {role?.title || `Role ${roleId}`}
+            {/* Show different headers based on user mode */}
+            {isSalesMemberView ? (
+              // Sales member view - only show current role
+              <th className="px-2 py-3 text-center border-b-0" colSpan={2}>
+                {currentRole?.title || 'Your Role'}
+              </th>
+            ) : (
+              // Seller view - show selected roles
+              displayRoles.map(role => (
+                <th key={role.id} className="px-2 py-3 text-center border-b-0" colSpan={2}>
+                  {role.title}
                 </th>
-              );
-            })}
+              ))
+            )}
             
+            {/* Total columns - always show */}
             <th className="px-2 py-3 text-center border-b-0 bg-green-50 border-l border-gray-200" colSpan={2}>
               <span className="text-green-800">Total</span>
             </th>
           </tr>
           
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            {selectedRoles.map(roleId => (
-              <React.Fragment key={`header-${roleId}`}>
+            {/* Show different column headers based on user mode */}
+            {isSalesMemberView ? (
+              // Sales member view - only show current role columns
+              <>
                 <th className="px-2 py-3 text-center w-20">Comm. %</th>
                 <th className="px-2 py-3 text-center w-20">Bonus €</th>
-              </React.Fragment>
-            ))}
+              </>
+            ) : (
+              // Seller view - show columns for all selected roles
+              selectedRoles.map(roleId => (
+                <React.Fragment key={`header-${roleId}`}>
+                  <th className="px-2 py-3 text-center w-20">Comm. %</th>
+                  <th className="px-2 py-3 text-center w-20">Bonus €</th>
+                </React.Fragment>
+              ))
+            )}
             
+            {/* Total column headers - always show */}
             <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600 border-l border-gray-200">Comm. %</th>
             <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600">Bonus €</th>
           </tr>
@@ -221,6 +265,11 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           {relevantProducts.map((product, productIndex) => {
             const totals = calculateTotals(product);
             const isNewlyAdded = newlyAddedProductIds.includes(product.id);
+            
+            // Get the roles to display for this product row based on mode
+            const rolesForProduct = isSalesMemberView && currentSalesRoleId 
+              ? [currentSalesRoleId] 
+              : selectedRoles;
             
             return (
               <tr key={product.id} className={`hover:bg-gray-50 ${isNewlyAdded ? 'bg-green-50/20' : ''}`}>
@@ -265,7 +314,8 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                   )}
                 </td>
                 
-                {selectedRoles.map((roleId, roleIndex) => (
+                {/* Display cells for each role */}
+                {rolesForProduct.map((roleId, roleIndex) => (
                   <React.Fragment key={`role-${roleId}-${product.id}`}>
                     <td className="px-2 py-2 text-sm text-center text-gray-600">
                       {isEditMode ? (
@@ -295,6 +345,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                   </React.Fragment>
                 ))}
                 
+                {/* Total columns - always show */}
                 <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50 border-l border-gray-200">
                   {totals.commission}
                 </td>
@@ -307,24 +358,28 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           
           {relevantProducts.length === 0 && (
             <tr>
-              <td colSpan={selectedRoles.length * 2 + 5} className="p-8 text-center text-gray-500">
-                {selectedRoles.length === 0 
-                  ? "Select at least one role to see comparison data." 
-                  : "No products available for the selected roles."}
+              <td colSpan={(isSalesMemberView ? 2 : selectedRoles.length * 2) + 5} className="p-8 text-center text-gray-500">
+                {isSalesMemberView 
+                  ? "No products are available for your role." 
+                  : selectedRoles.length === 0 
+                    ? "Select at least one role to see comparison data." 
+                    : "No products available for the selected roles."}
               </td>
             </tr>
           )}
         </tbody>
       </table>
       
-      {/* Product Selection Modal */}
-      <ProductSelectionModal
-        open={isProductSelectionOpen}
-        onOpenChange={setIsProductSelectionOpen}
-        products={products}
-        selectedProductIds={relevantProductIds}
-        onSelectProducts={handleProductSelection}
-      />
+      {/* Product Selection Modal - only available in seller mode */}
+      {userMode === 'seller' && (
+        <ProductSelectionModal
+          open={isProductSelectionOpen}
+          onOpenChange={setIsProductSelectionOpen}
+          products={products}
+          selectedProductIds={relevantProductIds}
+          onSelectProducts={handleProductSelection}
+        />
+      )}
     </div>
   );
 };

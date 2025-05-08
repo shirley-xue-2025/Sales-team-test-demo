@@ -162,19 +162,22 @@ export default function ProductSelectionModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden max-h-[80vh]">
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden flex flex-col max-h-[80vh]">
           <DialogTitle className="sr-only">Select Products</DialogTitle>
-          <div className="p-6 flex flex-col h-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Select products</h2>
-              <button 
-                onClick={() => onOpenChange(false)} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            
+          
+          {/* Header */}
+          <div className="flex justify-between items-center p-6 border-b">
+            <h2 className="text-2xl font-semibold">Select products</h2>
+            <button 
+              onClick={() => onOpenChange(false)} 
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          {/* Search and filter area */}
+          <div className="p-6 pb-2">
             <div className="flex justify-between items-center mb-4">
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" className="h-10 px-3">
@@ -231,10 +234,13 @@ export default function ProductSelectionModal({
                 </Button>
               </div>
             </div>
-            
-            <div className="border rounded-md overflow-hidden mb-6">
+          </div>
+          
+          {/* Content scrollable area */}
+          <div className="p-6 pt-0 flex-1 overflow-auto">
+            <div className="border rounded-md overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-50 text-left">
+                <thead className="bg-gray-50 text-left sticky top-0">
                   <tr>
                     <th className="p-3 w-12">
                       <Checkbox 
@@ -316,7 +322,8 @@ export default function ProductSelectionModal({
             </div>
           </div>
           
-          <div className="flex justify-between p-4 border-t">
+          {/* Fixed action buttons area */}
+          <div className="flex justify-between items-center p-4 border-t bg-white">
             <Button 
               variant="outline" 
               onClick={handleCancel}
