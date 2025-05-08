@@ -165,7 +165,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
           
           {filteredProducts.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
+              <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
                 No products found matching your search criteria.
               </td>
             </tr>
