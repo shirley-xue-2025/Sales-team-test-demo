@@ -261,12 +261,18 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         method: 'GET'
       });
       
-      if (!roleProducts) return [];
+      console.log(`Fetched products for role ${roleId}:`, roleProducts);
       
+      if (!roleProducts) {
+        console.warn(`No products returned for role ${roleId}`);
+        return [];
+      }
+      
+      // Extract product IDs for this role
       const roleProductIds = roleProducts.map((p: Product) => p.id);
       
       // Update roleIncentives
-      const { roleIncentives } = get();
+      const { roleIncentives, products, selectedRoles } = get();
       let updatedIncentives = [...roleIncentives];
       
       const existingIndex = updatedIncentives.findIndex(ri => ri.roleId === roleId);
@@ -274,16 +280,28 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       if (existingIndex >= 0) {
         updatedIncentives[existingIndex] = {
           ...updatedIncentives[existingIndex],
-          productIds: roleProductIds
+          productIds: [...roleProductIds] // Make a copy to avoid reference issues
         };
       } else if (roleProductIds.length > 0) {
         updatedIncentives.push({
           roleId,
-          productIds: roleProductIds
+          productIds: [...roleProductIds] // Make a copy to avoid reference issues
         });
       }
       
       set({ roleIncentives: updatedIncentives });
+      console.log(`Updated roleIncentives for role ${roleId}:`, updatedIncentives);
+      
+      // Update product selection status in the products array if this is a selected role
+      if (selectedRoles.includes(roleId) || get().currentSalesRoleId === roleId) {
+        // Mark products as selected/unselected based on whether they're in this role's product list
+        const updatedProducts = products.map(product => {
+          const isSelected = roleProductIds.includes(product.id);
+          return { ...product, selected: isSelected };
+        });
+        
+        set({ products: updatedProducts });
+      }
       
       return roleProducts;
     } catch (error) {
