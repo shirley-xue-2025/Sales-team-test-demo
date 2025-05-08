@@ -25,7 +25,7 @@ const IncentivePlanPage: React.FC = () => {
     getAllProducts
   } = useIncentiveStore();
   
-  // Once API data is loaded, update store with updated role names
+  // Once API data is loaded, update store with updated role names and fetch products
   useEffect(() => {
     if (apiRoles?.length) {
       // Map Sales Manager → Setter, Sales Representative → Junior Closer, Junior Sales → Senior Closer
@@ -60,6 +60,18 @@ const IncentivePlanPage: React.FC = () => {
       }
     }
   }, [apiRoles, setRoles, selectedRoles.length, toggleRoleSelection]);
+
+  // Fetch products when the component mounts or roles change
+  const { fetchProducts, isLoadingProducts } = useIncentiveStore(state => ({
+    fetchProducts: state.fetchProducts,
+    isLoadingProducts: state.isLoadingProducts
+  }));
+
+  useEffect(() => {
+    if (storeRoles.length > 0) {
+      fetchProducts();
+    }
+  }, [fetchProducts, storeRoles.length]);
   
   // Toggle edit mode
   const handleEditClick = () => {

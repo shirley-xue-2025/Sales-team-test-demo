@@ -1,19 +1,6 @@
 import { create } from 'zustand';
 import { Product, Role, RoleIncentive, CombinedIncentive } from './types';
-
-// Realistic coaching product names with proper Euro symbol for bonuses
-const mockProducts: Product[] = [
-  { id: "352041", name: "1-on-1 Strategy Session", created: "08.01.2024", commission: "20%", bonus: "5€", price: "499€", isSellable: true, selected: true },
-  { id: "349274", name: "Business Growth Masterclass", created: "20.12.2023", commission: "20%", bonus: "10€", price: "1299€", isSellable: true, selected: true },
-  { id: "302985", name: "Leadership Coaching Program", created: "04.05.2023", commission: "15%", bonus: "15€", price: "2499€", isSellable: true, selected: true },
-  { id: "302984", name: "Sales Acceleration Workshop", created: "04.06.2023", commission: "10%", bonus: "20€", price: "799€", isSellable: false, selected: false },
-  { id: "445504", name: "Marketing Mindset Course", created: "—", commission: "15%", bonus: "5€", price: "299€", isSellable: true, selected: false },
-  { id: "443939", name: "CEO Mentoring Package", created: "—", commission: "25%", bonus: "25€", price: "4999€", isSellable: true, selected: false },
-  { id: "441233", name: "Social Media Authority Program", created: "—", commission: "20%", bonus: "15€", price: "899€", isSellable: false, selected: false },
-  { id: "123456", name: "Email Marketing Mastery", created: "15.02.2024", commission: "10%", bonus: "5€", price: "399€", isSellable: true, selected: true },
-  { id: "234567", name: "Client Acquisition System", created: "22.03.2024", commission: "25%", bonus: "10€", price: "1999€", isSellable: true, selected: true },
-  { id: "345678", name: "Business Scaling Blueprint", created: "10.01.2024", commission: "30%", bonus: "15€", price: "2999€", isSellable: true, selected: true },
-];
+import { apiRequest } from './queryClient';
 
 // Type for user mode/context
 export type UserMode = 'seller' | 'sales';
@@ -27,6 +14,10 @@ interface IncentiveStore {
   selectedRoles: number[];
   userMode: UserMode; // New field to track if user is seller or sales member
   currentSalesRoleId: number | null; // When in sales mode, this tracks the current role
+  
+  // Loading states
+  isLoadingProducts: boolean;
+  isUpdatingProducts: boolean;
   
   // UI State
   activeTab: string;
@@ -42,6 +33,11 @@ interface IncentiveStore {
   setUserMode: (mode: UserMode) => void;
   setCurrentSalesRole: (roleId: number | null) => void;
   
+  // Data fetching
+  fetchProducts: () => Promise<void>;
+  fetchRoleProducts: (roleId: number) => Promise<void>;
+  updateRoleProducts: (roleId: number, productIds: string[]) => Promise<void>;
+  
   // Selectors
   getSelectedProductsForRole: (roleId: number) => Product[];
   getAllProducts: () => Product[];
@@ -52,13 +48,17 @@ interface IncentiveStore {
 
 export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   // Data
-  products: mockProducts,
+  products: [],
   roles: [],
   roleIncentives: [],
   mode: 'view',
   selectedRoles: [],
   userMode: 'seller', // Default mode is seller
   currentSalesRoleId: null,
+  
+  // Loading states
+  isLoadingProducts: false,
+  isUpdatingProducts: false,
   
   // UI State
   activeTab: 'default',
@@ -68,8 +68,9 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   setMode: (mode) => set({ mode }),
   
-  toggleProductSelection: (productId, roleId, selected) => {
-    const { roleIncentives } = get();
+  toggleProductSelection: async (productId, roleId, selected) => {
+    // First update the local state for immediate feedback
+    const { roleIncentives, products } = get();
     let updatedIncentives = [...roleIncentives];
     
     const existingIndex = updatedIncentives.findIndex(ri => ri.roleId === roleId);
@@ -100,6 +101,30 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     }
     
     set({ roleIncentives: updatedIncentives });
+    
+    // Then update the database
+    try {
+      set({ isUpdatingProducts: true });
+      
+      // Get all product IDs for this role
+      const productIds = get().getSelectedProductsForRole(roleId).map(p => p.id);
+      
+      // Send the update to the backend
+      await get().updateRoleProducts(roleId, productIds);
+      
+      // Update the selected status of the product in the products array
+      const updatedProducts = products.map(p => 
+        p.id === productId 
+          ? { ...p, selected } 
+          : p
+      );
+      
+      set({ products: updatedProducts });
+    } catch (error) {
+      console.error('Error updating product selection:', error);
+    } finally {
+      set({ isUpdatingProducts: false });
+    }
   },
   
   toggleRoleSelection: (roleId) => {
@@ -131,6 +156,111 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   setUserMode: (userMode) => set({ userMode }),
   
   setCurrentSalesRole: (roleId) => set({ currentSalesRoleId: roleId }),
+
+  // Data fetching
+  fetchProducts: async () => {
+    try {
+      set({ isLoadingProducts: true });
+      const products = await apiRequest<Product[]>('/api/products', {
+        method: 'GET'
+      });
+      set({ products });
+      
+      // Initialize roleIncentives based on product selected status
+      const roleIncentives: RoleIncentive[] = [];
+      
+      // Group products by their role assignments
+      const roleMap: Record<number, string[]> = {};
+      
+      // Get all roles
+      const { roles } = get();
+      
+      // Fetch products for each role
+      for (const role of roles) {
+        try {
+          const roleProducts = await apiRequest<Product[]>(`/api/roles/${role.id}/products`, {
+            method: 'GET'
+          });
+          if (roleProducts && roleProducts.length > 0) {
+            roleMap[role.id] = roleProducts.map((p: Product) => p.id);
+          }
+        } catch (error) {
+          console.error(`Error fetching products for role ${role.id}:`, error);
+        }
+      }
+      
+      // Create role incentives array from the role map
+      for (const [roleId, productIds] of Object.entries(roleMap)) {
+        if (productIds.length > 0) {
+          roleIncentives.push({
+            roleId: parseInt(roleId),
+            productIds
+          });
+        }
+      }
+      
+      set({ roleIncentives });
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      set({ isLoadingProducts: false });
+    }
+  },
+  
+  fetchRoleProducts: async (roleId) => {
+    try {
+      const roleProducts = await apiRequest<Product[]>(`/api/roles/${roleId}/products`, {
+        method: 'GET'
+      });
+      
+      if (!roleProducts) return [];
+      
+      const roleProductIds = roleProducts.map((p: Product) => p.id);
+      
+      // Update roleIncentives
+      const { roleIncentives } = get();
+      let updatedIncentives = [...roleIncentives];
+      
+      const existingIndex = updatedIncentives.findIndex(ri => ri.roleId === roleId);
+      
+      if (existingIndex >= 0) {
+        updatedIncentives[existingIndex] = {
+          ...updatedIncentives[existingIndex],
+          productIds: roleProductIds
+        };
+      } else if (roleProductIds.length > 0) {
+        updatedIncentives.push({
+          roleId,
+          productIds: roleProductIds
+        });
+      }
+      
+      set({ roleIncentives: updatedIncentives });
+      
+      return roleProducts;
+    } catch (error) {
+      console.error(`Error fetching products for role ${roleId}:`, error);
+      return [];
+    }
+  },
+  
+  updateRoleProducts: async (roleId, productIds) => {
+    try {
+      await apiRequest('/api/roles/' + roleId + '/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productIds })
+      });
+      
+      // Refresh products for this role
+      await get().fetchRoleProducts(roleId);
+    } catch (error) {
+      console.error(`Error updating products for role ${roleId}:`, error);
+      throw error;
+    }
+  },
 
   // Selectors
   getSelectedProductsForRole: (roleId) => {
