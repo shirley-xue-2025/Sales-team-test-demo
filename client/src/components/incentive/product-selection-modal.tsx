@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,92 @@ interface ProductSelectionModalProps {
 // Number of products to display per page
 const ITEMS_PER_PAGE = 5;
 
+// Product row component extracted to ensure proper re-renders
+const ProductRow = React.memo(({ 
+  product, 
+  isSelected, 
+  onToggle 
+}: { 
+  product: Product; 
+  isSelected: boolean; 
+  onToggle: (productId: string, selected: boolean) => void;
+}) => {
+  console.log(`[ProductRow] Rendering row for ${product.id}, isSelected=${isSelected}`);
+
+  const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
+    // Prevent click handling if the click was on or inside the checkbox itself
+    const target = e.target as HTMLElement;
+    const isCheckboxOrChild = 
+      target.tagName.toLowerCase() === 'button' || 
+      target.closest('[role="checkbox"]') !== null ||
+      target.tagName.toLowerCase() === 'svg' || 
+      target.tagName.toLowerCase() === 'path';
+      
+    if (!isCheckboxOrChild) {
+      console.log(`[ProductRow] Row click detected for ${product.id}, toggling from ${isSelected} to ${!isSelected}`);
+      onToggle(product.id, !isSelected);
+    }
+  }, [product.id, isSelected, onToggle]);
+
+  const handleCheckboxChange = useCallback((checked: boolean | 'indeterminate') => {
+    console.log(`[ProductRow] Checkbox clicked for ${product.id}:`, checked);
+    const finalChecked = checked === 'indeterminate' ? false : !!checked;
+    
+    // Important: If the incoming state matches current state but we're clicking to toggle,
+    // force the opposite value to ensure the change happens
+    const newState = isSelected === finalChecked ? !isSelected : finalChecked;
+    console.log(`[ProductRow] Setting ${product.id} to ${newState}`);
+    
+    onToggle(product.id, newState);
+  }, [product.id, isSelected, onToggle]);
+
+  return (
+    <tr 
+      key={product.id} 
+      className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
+      onClick={handleRowClick}
+    >
+      <td className="p-3">
+        <Checkbox
+          id={`product-${product.id}`}
+          name={`product-${product.id}`}
+          checked={isSelected}
+          onCheckedChange={handleCheckboxChange}
+          className="rounded-sm"
+        />
+      </td>
+      <td className="p-3 text-sm text-gray-600">{product.id}</td>
+      <td className="p-3">
+        <div className="flex items-center">
+          <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-md flex items-center justify-center mr-3">
+            <span className="text-xs text-gray-500">IMG</span>
+          </div>
+          <div>
+            <div className="text-sm font-medium">{product.name}</div>
+            <div className="text-xs text-gray-500">Product ID: {product.id}</div>
+          </div>
+        </div>
+      </td>
+      <td className="p-3 text-sm text-right">{product.price}</td>
+      <td className="p-3 text-center">
+        {product.isSellable ? (
+          <div className="flex justify-center">
+            <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <svg className="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+});
+
 export default function ProductSelectionModal({
   open,
   onOpenChange,
@@ -25,6 +111,9 @@ export default function ProductSelectionModal({
   selectedProductIds,
   onSelectProducts
 }: ProductSelectionModalProps) {
+  // Create state with key counter to force remounts when needed
+  const [localStateKey, setLocalStateKey] = useState(0);
+  
   // Local state to track selections before committing changes
   const [localSelectedIds, setLocalSelectedIds] = useState<string[]>([]);
   
@@ -35,6 +124,18 @@ export default function ProductSelectionModal({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Reset local selections when the modal opens
+  useEffect(() => {
+    if (open) {
+      console.log('[ProductSelectionModal] Modal opened, resetting state with selectedProductIds:', selectedProductIds);
+      // Create a new array to avoid reference issues and increment the key to force remounting
+      setLocalSelectedIds([...selectedProductIds]);
+      setLocalStateKey(prev => prev + 1);
+      setCurrentPage(1);
+      setSearchQuery('');
+    }
+  }, [open, selectedProductIds]);
   
   // Filtered products based on search query
   const filteredProducts = products.filter(product => 
@@ -52,7 +153,7 @@ export default function ProductSelectionModal({
   );
   
   // Generate pagination array
-  const generatePagination = (): number[] => {
+  const generatePagination = useCallback((): number[] => {
     if (totalPages <= 10) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
@@ -80,48 +181,59 @@ export default function ProductSelectionModal({
     }
     
     return pages;
-  };
-  
-  // Reset local selections when the modal opens
-  useEffect(() => {
-    if (open) {
-      // Create a new array to avoid reference issues
-      setLocalSelectedIds([...selectedProductIds]);
-      setCurrentPage(1);
-      setSearchQuery('');
-    }
-  }, [open, selectedProductIds]);
-  
-  // Dependency-free useEffect for modal opening
-  useEffect(() => {
-    // No operations needed here anymore after removing logs
-  }, [open, products]);
+  }, [currentPage, totalPages]);
 
   // Handle checkbox change - Only affects local state, not database
-  const handleCheckboxChange = React.useCallback((productId: string, checked: boolean) => {
-    console.log(`[ProductSelectionModal] handleCheckboxChange called with:`, { productId, checked });
+  const handleProductToggle = useCallback((productId: string, checked: boolean) => {
+    console.log(`[ProductSelectionModal] handleProductToggle called for ${productId}, checked=${checked}`);
     
     // Always perform this operation directly to ensure state updates
     setLocalSelectedIds(prevSelections => {
-      if (checked) {
-        // Add the product if not already selected
-        if (!prevSelections.includes(productId)) {
-          console.log(`[ProductSelectionModal] Adding product ${productId} to selections`);
-          return [...prevSelections, productId];
-        }
-      } else {
-        // Remove the product if currently selected
-        if (prevSelections.includes(productId)) {
-          console.log(`[ProductSelectionModal] Removing product ${productId} from selections`);
-          return prevSelections.filter(id => id !== productId);
-        }
+      const isCurrentlySelected = prevSelections.includes(productId);
+      
+      // If current state matches desired state, no changes needed
+      if ((isCurrentlySelected && checked) || (!isCurrentlySelected && !checked)) {
+        return prevSelections;
       }
-      return prevSelections; // No change needed
+      
+      // Create new array to ensure React detects the change
+      if (checked) {
+        return [...prevSelections, productId];
+      } else {
+        return prevSelections.filter(id => id !== productId);
+      }
     });
   }, []);
 
+  // Handle select/deselect all on current page
+  const handleSelectAllChange = useCallback((checked: boolean | 'indeterminate') => {
+    console.log(`[ProductSelectionModal] Select all changed to ${checked}`);
+    const isChecked = checked === true; // Only true if explicitly set to true
+    
+    setLocalSelectedIds(prevSelections => {
+      // Make a copy to avoid mutations
+      const newSelections = [...prevSelections];
+      
+      if (isChecked) {
+        // Add all products from current page that aren't already selected
+        currentProducts.forEach(product => {
+          if (!newSelections.includes(product.id)) {
+            newSelections.push(product.id);
+          }
+        });
+      } else {
+        // Remove all products from current page
+        return newSelections.filter(id => 
+          !currentProducts.some(product => product.id === id)
+        );
+      }
+      
+      return newSelections;
+    });
+  }, [currentProducts]);
+
   // Handle save button click
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     // Check if any products are being removed
     const productsBeingRemoved = selectedProductIds.filter(id => !localSelectedIds.includes(id))
       .map(id => products.find(p => p.id === id))
@@ -135,41 +247,55 @@ export default function ProductSelectionModal({
       onSelectProducts(localSelectedIds);
       onOpenChange(false);
     }
-  };
+  }, [localSelectedIds, selectedProductIds, products, onSelectProducts, onOpenChange]);
 
   // Handle cancel button
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     // Reset to original selections with a new array copy
     setLocalSelectedIds([...selectedProductIds]);
     onOpenChange(false);
-  };
+  }, [selectedProductIds, onOpenChange]);
 
   // Handle confirm removal in warning dialog
-  const handleConfirmRemoval = () => {
+  const handleConfirmRemoval = useCallback(() => {
     // User confirmed, proceed with changes
     onSelectProducts(localSelectedIds);
     setShowWarning(false);
     onOpenChange(false);
-  };
+  }, [localSelectedIds, onSelectProducts, onOpenChange]);
 
   // Handle cancel removal in warning dialog
-  const handleCancelRemoval = () => {
+  const handleCancelRemoval = useCallback(() => {
     // User cancelled, reset to original selections with a new array copy
     setLocalSelectedIds([...selectedProductIds]);
     setShowWarning(false);
-  };
+  }, [selectedProductIds]);
   
   // Handle page change
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-  };
+  }, [totalPages]);
 
   // Calculate the selection count
   const selectionCount = localSelectedIds.length;
   
   // Generate page numbers for display
   const paginationItems = generatePagination();
+  
+  // All products on current page are selected
+  const allCurrentSelected = currentProducts.length > 0 && 
+    currentProducts.every(p => localSelectedIds.includes(p.id));
+
+  // Debug current state
+  console.log(`[ProductSelectionModal] Rendering with localSelectedIds:`, localSelectedIds);
+  console.log(`[ProductSelectionModal] Selectable products:`, currentProducts);
+  
+  // Force React to re-render this component when localSelectedIds changes
+  // by including the key in the dependency array
+  React.useEffect(() => {
+    console.log(`[ProductSelectionModal] Selection state changed, localSelectedIds:`, localSelectedIds);
+  }, [localSelectedIds, localStateKey]);
 
   return (
     <>
@@ -180,7 +306,6 @@ export default function ProductSelectionModal({
           {/* Header */}
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-2xl font-semibold">Select products</h2>
-            {/* Removed duplicate close button */}
           </div>
           
           {/* Search and filter area */}
@@ -252,6 +377,11 @@ export default function ProductSelectionModal({
               </div>
             )}
             
+            {/* State debug display */}
+            <div className="mb-4 p-2 bg-blue-50 text-blue-800 rounded-md">
+              <strong>Selected count:</strong> {localSelectedIds.length}
+            </div>
+            
             <div className="border rounded-md overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50 text-left sticky top-0">
@@ -260,44 +390,8 @@ export default function ProductSelectionModal({
                       <Checkbox 
                         id="select-all-checkbox"
                         name="select-all-checkbox"
-                        checked={currentProducts.length > 0 && currentProducts.every(p => localSelectedIds.includes(p.id))}
-                        onCheckedChange={(checked) => {
-                          console.log("[ProductSelectionModal] Select All onCheckedChange:", checked);
-                          const isChecked = !!checked;
-                          
-                          // Explicitly update with a function to ensure we have the latest state
-                          setLocalSelectedIds(prevSelections => {
-                            if (isChecked) {
-                              // Select all products in current view
-                              const newSelectedIds = [...prevSelections];
-                              
-                              // Add all products from current page
-                              currentProducts.forEach(p => {
-                                if (!newSelectedIds.includes(p.id)) {
-                                  newSelectedIds.push(p.id);
-                                }
-                              });
-                              
-                              console.log("[ProductSelectionModal] Selecting all products:", 
-                                currentProducts.map(p => p.id), 
-                                "New selections:", newSelectedIds);
-                              
-                              return newSelectedIds;
-                            } else {
-                              // Unselect all products in current view
-                              const productIdsToRemove = currentProducts.map(p => p.id);
-                              const newSelectedIds = prevSelections.filter(id => 
-                                !productIdsToRemove.includes(id)
-                              );
-                              
-                              console.log("[ProductSelectionModal] Unselecting all products:", 
-                                productIdsToRemove,
-                                "New selections:", newSelectedIds);
-                              
-                              return newSelectedIds;
-                            }
-                          });
-                        }}
+                        checked={allCurrentSelected}
+                        onCheckedChange={handleSelectAllChange}
                         className="rounded-sm"
                       />
                     </th>
@@ -308,83 +402,24 @@ export default function ProductSelectionModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {products.length > 0 && currentProducts.map((product) => {
-                    const isSelected = localSelectedIds.includes(product.id);
-                    return (
-                      <tr 
-                        key={product.id} 
-                        className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
-                        onClick={(e) => {
-                          // Prevent click handling if the click was on or inside the checkbox itself
-                          // This prevents the double-toggling issue when clicking directly on checkbox
-                          const target = e.target as HTMLElement;
-                          const isCheckboxOrChild = 
-                            target.tagName.toLowerCase() === 'button' || 
-                            target.closest('[role="checkbox"]') !== null ||
-                            target.tagName.toLowerCase() === 'svg' || 
-                            target.tagName.toLowerCase() === 'path';
-                            
-                          if (!isCheckboxOrChild) {
-                            handleCheckboxChange(product.id, !isSelected);
-                          }
-                        }}
-                      >
-                        <td className="p-3">
-                          <Checkbox
-                            id={`product-${product.id}`}
-                            name={`product-${product.id}`}
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              console.log(`[ProductSelectionModal] Checkbox ${product.id} clicked, current state:`, 
-                                { isSelected, newState: checked });
-                                
-                              // Using explicit boolean conversion with !! for consistent boolean values
-                              const isChecked = !!checked;
-                              
-                              // Log the exact value received by our component  
-                              console.log(`[ProductSelectionModal] Product ${product.id} changing from ${isSelected} to ${isChecked}`);
-                              
-                              // Force opposite state if they're the same (indicating a toggle failure)
-                              const finalState = isSelected === isChecked ? !isSelected : isChecked;
-                              console.log(`[ProductSelectionModal] Final state for ${product.id}: ${finalState}`);
-                              
-                              // Apply the change
-                              handleCheckboxChange(product.id, finalState);
-                            }}
-                            className="rounded-sm"
-                          />
-                        </td>
-                        <td className="p-3 text-sm text-gray-600">{product.id}</td>
-                        <td className="p-3">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-md flex items-center justify-center mr-3">
-                              <span className="text-xs text-gray-500">IMG</span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium">{product.name}</div>
-                              <div className="text-xs text-gray-500">Product ID: {product.id}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 text-sm text-right">{product.price}</td>
-                        <td className="p-3 text-center">
-                          {product.isSellable ? (
-                            <div className="flex justify-center">
-                              <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          ) : (
-                            <div className="flex justify-center">
-                              <svg className="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {/* Using a key on this component to force re-renders */}
+                  <React.Fragment key={`product-list-${localStateKey}`}>
+                    {products.length > 0 && currentProducts.map((product) => {
+                      // Explicitly check if this product ID is in selected IDs
+                      const isSelected = localSelectedIds.includes(product.id);
+                      
+                      // Render individual product row with memoization for performance
+                      return (
+                        <ProductRow
+                          key={`product-row-${product.id}-${isSelected ? 'selected' : 'unselected'}`}
+                          product={product}
+                          isSelected={isSelected}
+                          onToggle={handleProductToggle}
+                        />
+                      );
+                    })}
+                  </React.Fragment>
+                  
                   {(currentProducts.length === 0 || products.length === 0) && (
                     <tr>
                       <td colSpan={5} className="p-4 text-center text-gray-500">

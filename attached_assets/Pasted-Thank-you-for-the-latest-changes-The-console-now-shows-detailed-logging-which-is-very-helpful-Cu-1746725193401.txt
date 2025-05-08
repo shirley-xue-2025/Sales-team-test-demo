@@ -1,0 +1,37 @@
+Thank you for the latest changes. The console now shows detailed logging, which is very helpful!
+
+Current Behavior:
+
+Console Output: When I click a product checkbox (e.g., 'scaling-blueprint' which is initially checked):
+The console correctly logs:
+[useProductSelection] toggleProduct called with ID: scaling-blueprint
+[useProductSelection] Product ID scaling-blueprint is currently selected. Removing.
+[useProductSelection] Previous selected IDs: (7) […]
+[useProductSelection] New selected IDs after removal: (6) […]
+[ProductSelectionModal] onSelectedProductsChange called with: (6) […]
+[ProductSelectionModal] New Selected Product IDs: (6) […]
+This indicates the internal state array for selected product IDs is being updated correctly (e.g., from 7 items down to 6).
+UI Problem: Despite the internal state updating (as seen in the logs), the UI does not reflect this change:
+The checkbox for 'scaling-blueprint' remains visually checked.
+The "Select (7)" button at the bottom of the modal still says 7.
+Event Listener: The click event listener on the underlying <button> DOM element still correctly shows f noop() from react-dom.development.js, which is expected for React.
+This strongly suggests that while the state update logic in useProductSelection (or equivalent) is working, the React components (ProductSelectionModal and/or the individual Checkbox component) are not re-rendering correctly to reflect this updated state.
+
+Could you please:
+
+Review the ProductSelectionModal.tsx component (or the component responsible for rendering the list of checkboxes):
+
+Ensure it's correctly receiving the updated list of selected product IDs as a prop after useProductSelection updates the state.
+Ensure it's correctly passing the checked status (derived from the updated selected IDs) to each individual checkbox component.
+Verify that there are no issues (like incorrect React.memo or shouldComponentUpdate logic) preventing it from re-rendering when its props change.
+Review the custom Checkbox.tsx component:
+
+Ensure it correctly uses the checked prop passed to it to determine its visual state.
+Ensure its internal onClick or onChange handler is correctly calling the function passed via props (which should ultimately trigger toggleProduct in useProductSelection).
+Provide the current code for:
+
+The part of ProductSelectionModal.tsx that maps over products and renders each checkbox.
+The Checkbox.tsx component itself.
+The toggleProduct function (and related state update logic) within useProductSelection.ts.
+The main goal is to ensure the UI re-renders to match the (correctly updated) internal state when a product is unselected."
+
