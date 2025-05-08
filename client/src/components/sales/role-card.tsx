@@ -59,8 +59,8 @@ const RoleCard = ({
   ) : null;
 
   return (
-    <Card className="overflow-hidden border border-gray-200 rounded-sm shadow-sm flex flex-col h-full">
-      <CardContent className="p-5 border-b border-gray-200 flex flex-col flex-grow">
+    <Card className="h-full grid grid-rows-[auto_1fr_auto] overflow-hidden border border-gray-200 rounded-sm shadow-sm">
+      <CardContent className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <h4 className="text-md font-medium text-gray-900">{role.title}</h4>
@@ -135,36 +135,41 @@ const RoleCard = ({
             </DropdownMenu>
           </div>
         </div>
-        <p className="mt-2 text-sm text-gray-600 flex-grow">{role.description}</p>
+        <p className="mt-2 text-sm text-gray-600">{role.description}</p>
       </CardContent>
       
-      {/* Member count button in separate div at bottom */}
-      <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 mt-auto">
-        <button
-          onClick={handleMemberCountClick}
-          className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          {role.memberCount || 0} members
-        </button>
-      </div>
-      <CardFooter className="px-5 py-3 bg-gray-50">
-        <div className="w-full">
-          <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
-          <div className="flex flex-wrap gap-2">
-            {Array.isArray(role.permissions) ? 
-              (role.permissions as string[]).map((permission: string) => (
-                <PermissionBadge key={permission} permission={permission} />
-              )) 
-            : null}
-          </div>
+      <div className="flex-1"></div>
+      
+      {/* Member count and permissions in footer */}
+      <div className="border-t border-gray-200">
+        <div className="px-5 py-3 bg-gray-50">
+          <button
+            onClick={handleMemberCountClick}
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            {role.memberCount || 0} members
+          </button>
         </div>
-      </CardFooter>
+        
+        <CardFooter className="px-5 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="w-full">
+            <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
+            <div className="flex flex-wrap gap-2">
+              {Array.isArray(role.permissions) ? 
+                (role.permissions as string[]).map((permission: string) => (
+                  <PermissionBadge key={permission} permission={permission} />
+                )) 
+              : null}
+            </div>
+          </div>
+        </CardFooter>
+      </div>
     </Card>
   );
 };

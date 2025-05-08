@@ -346,14 +346,24 @@ export default function MembersPage() {
                                 // In a real app, this would make an API call to delete the role
                                 console.log("Deleting role:", role.id);
                                 
-                                // For demonstration, we'll simulate deletion by filtering out the role
-                                const updatedRoles = roles.filter(r => r.id !== role.id);
-                                queryClient.setQueryData(['/api/roles'], updatedRoles);
-                                
-                                showToast('Role removed', {
-                                  description: `The ${role.title} role has been removed.`,
-                                  position: 'top-center',
-                                });
+                                // Make API call to delete the role
+                                apiRequest('DELETE', `/api/roles/${role.id}`)
+                                  .then(() => {
+                                    // Invalidate queries to update data
+                                    queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+                                    
+                                    showToast('Role removed', {
+                                      description: `The ${role.title} role has been removed.`,
+                                      position: 'top-center',
+                                    });
+                                  })
+                                  .catch(error => {
+                                    console.error("Error deleting role:", error);
+                                    showToast('Failed to delete role', {
+                                      description: 'An error occurred while deleting the role.',
+                                      position: 'top-center',
+                                    });
+                                  });
                               }
                             }
                           }}
