@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
 import { type Role } from '@shared/schema';
 import { useLocation } from 'wouter';
@@ -59,9 +58,10 @@ const RoleCard = ({
   ) : null;
 
   return (
-    <Card className="h-full grid grid-rows-[auto_1fr_auto] overflow-hidden border border-gray-200 rounded-sm shadow-sm">
-      <CardContent className="p-5 border-b border-gray-200">
-        <div className="flex justify-between items-center">
+    <div className="h-full flex flex-col border border-gray-200 rounded-sm shadow-sm">
+      {/* Header section - fixed height */}
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex justify-between items-start">
           <div className="flex items-center">
             <h4 className="text-md font-medium text-gray-900">{role.title}</h4>
             {isDefaultBadge}
@@ -136,41 +136,40 @@ const RoleCard = ({
           </div>
         </div>
         <p className="mt-2 text-sm text-gray-600">{role.description}</p>
-      </CardContent>
+      </div>
       
-      <div className="flex-1"></div>
+      {/* Middle flexible section - will stretch to fill available space */}
+      <div className="flex-grow"></div>
       
-      {/* Member count and permissions in footer */}
-      <div className="border-t border-gray-200">
-        <div className="px-5 py-3 bg-gray-50">
+      {/* Footer section - always at bottom, members count will stay on one line */}
+      <div className="mt-auto">
+        <div className="border-t border-gray-200 px-5 py-3 bg-gray-50">
           <button
             onClick={handleMemberCountClick}
-            className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center whitespace-nowrap overflow-hidden"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {role.memberCount || 0} members
+            <span className="truncate">{role.memberCount || 0} members</span>
           </button>
         </div>
         
-        <CardFooter className="px-5 py-3 bg-gray-50 border-t border-gray-200">
-          <div className="w-full">
-            <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
-            <div className="flex flex-wrap gap-2">
-              {Array.isArray(role.permissions) ? 
-                (role.permissions as string[]).map((permission: string) => (
-                  <PermissionBadge key={permission} permission={permission} />
-                )) 
-              : null}
-            </div>
+        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
+          <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
+          <div className="flex flex-wrap gap-2">
+            {Array.isArray(role.permissions) ? 
+              (role.permissions as string[]).map((permission: string) => (
+                <PermissionBadge key={permission} permission={permission} />
+              )) 
+            : null}
           </div>
-        </CardFooter>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
