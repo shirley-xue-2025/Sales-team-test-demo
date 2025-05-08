@@ -217,12 +217,10 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
           
           <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             {/* Show columns for all selected roles */}
-            {selectedRoles.map(roleId => (
-              <React.Fragment key={`header-${roleId}`}>
-                <th className="px-2 py-3 text-center w-20">Comm. %</th>
-                <th className="px-2 py-3 text-center w-20">Bonus €</th>
-              </React.Fragment>
-            ))}
+            {selectedRoles.map(roleId => [
+              <th className="px-2 py-3 text-center w-20" key={`comm-${roleId}`}>Comm. %</th>,
+              <th className="px-2 py-3 text-center w-20" key={`bonus-${roleId}`}>Bonus €</th>
+            ]).flat()}
             
             {/* Total column headers - always show */}
             <th className="px-2 py-3 text-center w-20 bg-green-50 font-semibold text-gray-600 border-l border-gray-200">Comm. %</th>
@@ -279,35 +277,33 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
                 </td>
                 
                 {/* Display cells for each role */}
-                {selectedRoles.map((roleId, roleIndex) => (
-                  <React.Fragment key={`role-${roleId}-${product.id}`}>
-                    <td className="px-2 py-2 text-sm text-center text-gray-600">
-                      {isEditMode ? (
-                        <Input
-                          type="text"
-                          className="h-8 text-center"
-                          value={getCellValue(product, roleId, 'commission')}
-                          onChange={(e) => handleEditChange(product.id, roleId, 'commission', e.target.value)}
-                          ref={isNewlyAdded && productIndex === 0 && roleIndex === 0 ? firstNewInputRef : undefined}
-                        />
-                      ) : (
-                        getCellValue(product, roleId, 'commission')
-                      )}
-                    </td>
-                    <td className="px-2 py-2 text-sm text-center text-gray-600">
-                      {isEditMode ? (
-                        <Input
-                          type="text"
-                          className="h-8 text-center"
-                          value={getCellValue(product, roleId, 'bonus')}
-                          onChange={(e) => handleEditChange(product.id, roleId, 'bonus', e.target.value)}
-                        />
-                      ) : (
-                        getCellValue(product, roleId, 'bonus')
-                      )}
-                    </td>
-                  </React.Fragment>
-                ))}
+                {selectedRoles.map((roleId, roleIndex) => [
+                  <td key={`comm-cell-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
+                    {isEditMode ? (
+                      <Input
+                        type="text"
+                        className="h-8 text-center"
+                        value={getCellValue(product, roleId, 'commission')}
+                        onChange={(e) => handleEditChange(product.id, roleId, 'commission', e.target.value)}
+                        ref={isNewlyAdded && productIndex === 0 && roleIndex === 0 ? firstNewInputRef : undefined}
+                      />
+                    ) : (
+                      getCellValue(product, roleId, 'commission')
+                    )}
+                  </td>,
+                  <td key={`bonus-cell-${roleId}-${product.id}`} className="px-2 py-2 text-sm text-center text-gray-600">
+                    {isEditMode ? (
+                      <Input
+                        type="text"
+                        className="h-8 text-center"
+                        value={getCellValue(product, roleId, 'bonus')}
+                        onChange={(e) => handleEditChange(product.id, roleId, 'bonus', e.target.value)}
+                      />
+                    ) : (
+                      getCellValue(product, roleId, 'bonus')
+                    )}
+                  </td>
+                ]).flat()}
                 
                 {/* Total columns - always show */}
                 <td className="px-2 py-2 text-sm font-semibold text-center text-green-800 bg-green-50 border-l border-gray-200">
