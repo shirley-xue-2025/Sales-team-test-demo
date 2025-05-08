@@ -69,8 +69,6 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   setMode: (mode) => set({ mode }),
   
   toggleProductSelection: async (productId, roleId, selected) => {
-    console.log(`Toggle product ${productId} for role ${roleId} to ${selected}`);
-    
     // First update the local state for immediate feedback
     const { roleIncentives, products } = get();
     let updatedIncentives = [...roleIncentives];
@@ -113,7 +111,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       const roleIncentive = updatedIncentives.find(ri => ri.roleId === roleId);
       const productIds = roleIncentive ? roleIncentive.productIds : [];
       
-      console.log(`Saving product selection to backend for role ${roleId}:`, productIds);
+      // Saving product selection to backend
       
       // Send the update to the backend
       await apiRequest(`/api/roles/${roleId}/products`, {
@@ -136,7 +134,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       // Refresh products for this role to ensure consistency
       await get().fetchRoleProducts(roleId);
       
-      console.log('Product selection saved successfully');
+      // Product selection saved successfully
     } catch (error) {
       console.error('Error updating product selection:', error);
       // Revert local changes on error
@@ -181,12 +179,10 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     try {
       set({ isLoadingProducts: true });
       
-      console.log('Fetching products from API...');
+      // Fetching products from API
       const products = await apiRequest<Product[]>('/api/products', {
         method: 'GET'
       });
-      
-      console.log('Products fetched:', products);
       
       if (!products || products.length === 0) {
         console.warn('No products returned from API');
@@ -433,12 +429,6 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   calculateCombinedIncentives: () => {
     const { products, selectedRoles, roleIncentives, userMode, currentSalesRoleId } = get();
-    
-    // For debug purposes
-    console.log('Calculate Combined Incentives');
-    console.log('Products:', products);
-    console.log('Selected Roles:', selectedRoles);
-    console.log('Role Incentives:', roleIncentives);
     
     // In sales member mode, we only care about the current role
     const rolesToUse = userMode === 'sales' && currentSalesRoleId !== null 
