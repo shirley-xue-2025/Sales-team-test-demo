@@ -101,22 +101,24 @@ export default function ProductSelectionModal({
   const handleCheckboxChange = (productId: string, checked: boolean) => {
     // Clone the current state to avoid reference issues
     const updatedSelections = [...localSelectedIds];
+    const currentlySelected = updatedSelections.includes(productId);
     
-    if (checked) {
-      // Add the product if it's not already selected
-      if (!updatedSelections.includes(productId)) {
+    // If checkbox state doesn't match our current selection state, update it
+    if (checked !== currentlySelected) {
+      if (checked) {
+        // Add the product if it's not already selected
         updatedSelections.push(productId);
+      } else {
+        // Remove the product if it's currently selected
+        const index = updatedSelections.indexOf(productId);
+        if (index !== -1) {
+          updatedSelections.splice(index, 1);
+        }
       }
-    } else {
-      // Remove the product if it's currently selected
-      const index = updatedSelections.indexOf(productId);
-      if (index !== -1) {
-        updatedSelections.splice(index, 1);
-      }
+      
+      // Update state with the new selections
+      setLocalSelectedIds(updatedSelections);
     }
-    
-    // Update state with the new selections
-    setLocalSelectedIds(updatedSelections);
   };
 
   // Handle save button click
@@ -299,9 +301,16 @@ export default function ProductSelectionModal({
                         key={product.id} 
                         className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
                         onClick={(e) => {
-                          // Prevent click handling if the click was on the checkbox itself
+                          // Prevent click handling if the click was on or inside the checkbox itself
                           // This prevents the double-toggling issue when clicking directly on checkbox
-                          if ((e.target as HTMLElement).tagName.toLowerCase() !== 'input') {
+                          const target = e.target as HTMLElement;
+                          const isCheckboxOrChild = 
+                            target.tagName.toLowerCase() === 'button' || 
+                            target.closest('[role="checkbox"]') !== null ||
+                            target.tagName.toLowerCase() === 'svg' || 
+                            target.tagName.toLowerCase() === 'path';
+                            
+                          if (!isCheckboxOrChild) {
                             handleCheckboxChange(product.id, !isSelected);
                           }
                         }}
@@ -311,7 +320,11 @@ export default function ProductSelectionModal({
                             id={`product-${product.id}`}
                             name={`product-${product.id}`}
                             checked={isSelected}
-                            onCheckedChange={(checked) => handleCheckboxChange(product.id, !!checked)}
+                            onCheckedChange={(checked) => {
+                              // Using explicit boolean conversion with !! and add console logging for debugging
+                              const isChecked = !!checked;
+                              handleCheckboxChange(product.id, isChecked);
+                            }}
                             className="rounded-sm"
                           />
                         </td>
