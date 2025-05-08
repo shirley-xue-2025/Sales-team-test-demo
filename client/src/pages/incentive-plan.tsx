@@ -71,7 +71,11 @@ const IncentivePlanPage: React.FC = () => {
     const fetchProductsData = async () => {
       try {
         console.log('Fetching initial products data from server');
+        // This waits for the product data to be fully loaded before rendering
         await useIncentiveStore.getState().fetchProducts();
+        
+        // Force a UI refresh
+        useIncentiveStore.getState().setMode(useIncentiveStore.getState().mode);
       } catch (error) {
         console.error('Failed to fetch products:', error);
       }

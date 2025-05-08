@@ -38,6 +38,8 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   const [isProductSelectionOpen, setIsProductSelectionOpen] = useState(false);
   // State to track newly added products for highlighting and focusing
   const [newlyAddedProductIds, setNewlyAddedProductIds] = useState<string[]>([]);
+  // State to hold the current view of products while the modal is open - this prevents changes from affecting the table
+  const [displayedProductIds, setDisplayedProductIds] = useState<string[]>(relevantProductIds);
   // Ref for the first input field of newly added products
   const firstNewInputRef = useRef<HTMLInputElement | null>(null);
   
@@ -103,6 +105,18 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
     }
   }, [isEditMode, newlyAddedProductIds]);
   
+  // Update displayedProductIds when relevantProductIds changes from server/parent
+  useEffect(() => {
+    setDisplayedProductIds(relevantProductIds);
+  }, [relevantProductIds]);
+  
+  // When opening the product selection modal, update displayedProductIds
+  const handleOpenProductSelection = () => {
+    // Store the current relevant product IDs so we can use them in the modal
+    setDisplayedProductIds(relevantProductIds);
+    setIsProductSelectionOpen(true);
+  };
+  
   // Handle product selection
   const handleProductSelection = async (selectedProductIds: string[]) => {
     if (onProductSelectionChange) {
@@ -150,7 +164,7 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
         
         <div className="flex space-x-2">
           <Button 
-            onClick={() => setIsProductSelectionOpen(true)}
+            onClick={handleOpenProductSelection}
             variant="outline"
             className="rounded-sm border-gray-300"
           >
