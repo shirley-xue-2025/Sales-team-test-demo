@@ -35,7 +35,7 @@ interface IncentiveStore {
   
   // Data fetching
   fetchProducts: () => Promise<void>;
-  fetchRoleProducts: (roleId: number) => Promise<void>;
+  fetchRoleProducts: (roleId: number) => Promise<Product[]>;
   updateRoleProducts: (roleId: number, productIds: string[]) => Promise<void>;
   
   // Selectors
