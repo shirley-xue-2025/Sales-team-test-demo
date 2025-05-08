@@ -208,16 +208,12 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         return;
       }
       
-      console.log('Fetching products for each role...');
-      
       // Fetch products for each role
       for (const role of roles) {
         try {
           const roleProducts = await apiRequest<Product[]>(`/api/roles/${role.id}/products`, {
             method: 'GET'
           });
-          
-          console.log(`Products for role ${role.id}:`, roleProducts);
           
           if (roleProducts && roleProducts.length > 0) {
             roleMap[role.id] = roleProducts.map((p: Product) => p.id);
@@ -232,8 +228,6 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         }
       }
       
-      console.log('Role map:', roleMap);
-      
       // Create role incentives array from the role map
       for (const [roleId, productIds] of Object.entries(roleMap)) {
         roleIncentives.push({
@@ -241,8 +235,6 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
           productIds
         });
       }
-      
-      console.log('Setting role incentives:', roleIncentives);
       set({ roleIncentives });
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -257,7 +249,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         method: 'GET'
       });
       
-      console.log(`Fetched products for role ${roleId}:`, roleProducts);
+      // Processing products for this role
       
       if (!roleProducts) {
         console.warn(`No products returned for role ${roleId}`);
@@ -286,7 +278,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       }
       
       set({ roleIncentives: updatedIncentives });
-      console.log(`Updated roleIncentives for role ${roleId}:`, updatedIncentives);
+      // Updated role incentives for this role
       
       // Update product selection status in the products array if this is a selected role
       if (selectedRoles.includes(roleId) || get().currentSalesRoleId === roleId) {
@@ -309,8 +301,6 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   updateRoleProducts: async (roleId, productIds) => {
     try {
       set({ isUpdatingProducts: true });
-      console.log(`Updating products for role ${roleId} with:`, productIds);
-      
       // Send update to backend - ensure this completes successfully
       const updatedProducts = await apiRequest('/api/roles/' + roleId + '/products', {
         method: 'PUT', 
@@ -324,7 +314,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         throw new Error(`Failed to update products for role ${roleId}`);
       }
       
-      console.log(`Backend returned updated products for role ${roleId}:`, updatedProducts);
+      // Backend returned updated products for this role
       
       // Update local state with the new product IDs for this role
       const roleIncentives = get().roleIncentives;
@@ -344,7 +334,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       }
       
       set({ roleIncentives: updatedIncentives });
-      console.log('Updated roleIncentives in local state:', updatedIncentives);
+      // Updated role incentives in local state
       
       // Mark products as selected/unselected in the products array
       const allProducts = get().products;
