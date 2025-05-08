@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,9 @@ interface ProductSelectionModalProps {
   onSelectProducts: (productIds: string[]) => void;
 }
 
+// Number of products to display per page
+const ITEMS_PER_PAGE = 5;
+
 export default function ProductSelectionModal({
   open,
   onOpenChange,
@@ -29,10 +32,62 @@ export default function ProductSelectionModal({
   const [showWarning, setShowWarning] = useState(false);
   const [productsToRemove, setProductsToRemove] = useState<Product[]>([]);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filtered products based on search query
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.id.includes(searchQuery)
+  );
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  
+  // Get current page products
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  
+  // Generate pagination array
+  const generatePagination = (): number[] => {
+    if (totalPages <= 10) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    // Show first, last, and pages around current
+    const pages: number[] = [];
+    
+    if (currentPage <= 5) {
+      // Beginning pages case
+      for (let i = 1; i <= 7; i++) pages.push(i);
+      pages.push(0); // Separator
+      pages.push(totalPages);
+    } else if (currentPage >= totalPages - 4) {
+      // End pages case
+      pages.push(1);
+      pages.push(0); // Separator
+      for (let i = totalPages - 6; i <= totalPages; i++) pages.push(i);
+    } else {
+      // Middle case
+      pages.push(1);
+      pages.push(0); // Separator
+      for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
+      pages.push(0); // Separator
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+  
   // Reset local selections when the modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setLocalSelectedIds(selectedProductIds);
+      setCurrentPage(1);
+      setSearchQuery('');
     }
   }, [open, selectedProductIds]);
 
@@ -91,16 +146,25 @@ export default function ProductSelectionModal({
     setLocalSelectedIds(selectedProductIds);
     setShowWarning(false);
   };
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
   // Calculate the selection count
   const selectionCount = localSelectedIds.length;
+  
+  // Generate page numbers for display
+  const paginationItems = generatePagination();
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden max-h-[80vh]">
           <DialogTitle className="sr-only">Select Products</DialogTitle>
-          <div className="p-6">
+          <div className="p-6 flex flex-col h-full">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold">Select products</h2>
               <button 
@@ -119,25 +183,50 @@ export default function ProductSelectionModal({
                 </Button>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                  <Input className="pl-9 h-10 w-48" placeholder="Search..." />
+                  <Input 
+                    className="pl-9 h-10 w-48" 
+                    placeholder="Search..." 
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1); // Reset to first page on search
+                    }}
+                  />
                 </div>
               </div>
               
               <div className="flex space-x-1">
-                <Button variant="ghost" size="sm" className="h-10 w-10 rounded-full bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-10 w-10 rounded-full bg-gray-100"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
                   &lt;
                 </Button>
-                {[1, 3, 4, 5, 6, 7, 8, 9, 10].map((page, i) => (
-                  <Button 
-                    key={i} 
-                    variant="ghost" 
-                    size="sm" 
-                    className={`h-10 w-10 rounded-full ${page === 1 ? 'bg-gray-200' : 'bg-gray-100'}`}
-                  >
-                    {page}
-                  </Button>
+                {paginationItems.map((page, i) => (
+                  page === 0 ? (
+                    <span key={`ellipsis-${i}`} className="flex items-center justify-center h-10 w-10">...</span>
+                  ) : (
+                    <Button 
+                      key={`page-${page}`} 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`h-10 w-10 rounded-full ${page === currentPage ? 'bg-gray-200' : 'bg-gray-100'}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </Button>
+                  )
                 ))}
-                <Button variant="ghost" size="sm" className="h-10 w-10 rounded-full bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-10 w-10 rounded-full bg-gray-100"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
                   &gt;
                 </Button>
               </div>
@@ -149,12 +238,20 @@ export default function ProductSelectionModal({
                   <tr>
                     <th className="p-3 w-12">
                       <Checkbox 
-                        checked={products.length > 0 && products.every(p => localSelectedIds.includes(p.id))}
+                        checked={currentProducts.length > 0 && currentProducts.every(p => localSelectedIds.includes(p.id))}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setLocalSelectedIds(products.map(p => p.id));
+                            const newSelectedIds = [...localSelectedIds];
+                            currentProducts.forEach(p => {
+                              if (!newSelectedIds.includes(p.id)) {
+                                newSelectedIds.push(p.id);
+                              }
+                            });
+                            setLocalSelectedIds(newSelectedIds);
                           } else {
-                            setLocalSelectedIds([]);
+                            setLocalSelectedIds(localSelectedIds.filter(id => 
+                              !currentProducts.some(p => p.id === id)
+                            ));
                           }
                         }}
                         className="rounded-sm"
@@ -167,7 +264,7 @@ export default function ProductSelectionModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {products.map((product) => (
+                  {currentProducts.map((product) => (
                     <tr key={product.id} className="hover:bg-gray-50 bg-white even:bg-gray-50">
                       <td className="p-3">
                         <Checkbox
@@ -207,6 +304,13 @@ export default function ProductSelectionModal({
                       </td>
                     </tr>
                   ))}
+                  {currentProducts.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-4 text-center text-gray-500">
+                        No products found matching your search criteria.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -15,6 +15,9 @@ const mockProducts: Product[] = [
   { id: "345678", name: "Business Scaling Blueprint", created: "10.01.2024", commission: "30%", bonus: "15€", price: "2999€", isSellable: true, selected: true },
 ];
 
+// Type for user mode/context
+export type UserMode = 'seller' | 'sales';
+
 interface IncentiveStore {
   // Data
   products: Product[];
@@ -22,6 +25,8 @@ interface IncentiveStore {
   roleIncentives: RoleIncentive[];
   mode: 'view' | 'edit';
   selectedRoles: number[];
+  userMode: UserMode; // New field to track if user is seller or sales member
+  currentSalesRoleId: number | null; // When in sales mode, this tracks the current role
   
   // UI State
   activeTab: string;
@@ -34,11 +39,14 @@ interface IncentiveStore {
   addRole: (role: Role) => void;
   removeRole: (roleId: number) => void;
   setRoles: (roles: Role[]) => void;
+  setUserMode: (mode: UserMode) => void;
+  setCurrentSalesRole: (roleId: number | null) => void;
   
   // Selectors
   getSelectedProductsForRole: (roleId: number) => Product[];
   getAllProducts: () => Product[];
   getProductById: (id: string) => Product | undefined;
+  getAvailableProductsForSalesMember: () => Product[];
   calculateCombinedIncentives: () => CombinedIncentive[];
 }
 
@@ -49,6 +57,8 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   roleIncentives: [],
   mode: 'view',
   selectedRoles: [],
+  userMode: 'seller', // Default mode is seller
+  currentSalesRoleId: null,
   
   // UI State
   activeTab: 'default',
@@ -118,6 +128,10 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   setRoles: (roles) => set({ roles }),
   
+  setUserMode: (userMode) => set({ userMode }),
+  
+  setCurrentSalesRole: (roleId) => set({ currentSalesRoleId: roleId }),
+
   // Selectors
   getSelectedProductsForRole: (roleId) => {
     const { products, roleIncentives } = get();
@@ -132,7 +146,13 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   },
   
   getAllProducts: () => {
-    const { products } = get();
+    const { products, userMode, currentSalesRoleId } = get();
+    
+    // If in sales member mode, only return products available to the current role
+    if (userMode === 'sales' && currentSalesRoleId !== null) {
+      return get().getAvailableProductsForSalesMember();
+    }
+    
     return products;
   },
   
@@ -141,20 +161,56 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     return products.find(p => p.id === id);
   },
   
+  // New selector to get only products available to the current sales role
+  getAvailableProductsForSalesMember: () => {
+    const { products, currentSalesRoleId, roleIncentives } = get();
+    
+    // If no current sales role is set, return empty array
+    if (currentSalesRoleId === null) {
+      return [];
+    }
+    
+    // Get the role incentive for the current role
+    const roleIncentive = roleIncentives.find(ri => ri.roleId === currentSalesRoleId);
+    
+    if (!roleIncentive) {
+      // If no specific incentives are defined for this role, return only sellable products
+      return products.filter(p => p.isSellable && p.selected);
+    }
+    
+    // Return only the products that are both sellable and assigned to this role
+    return products.filter(p => 
+      p.isSellable && roleIncentive.productIds.includes(p.id)
+    );
+  },
+  
   calculateCombinedIncentives: () => {
-    const { products, selectedRoles, roleIncentives } = get();
-    if (selectedRoles.length === 0) return [];
+    const { products, selectedRoles, roleIncentives, userMode, currentSalesRoleId } = get();
+    
+    // In sales member mode, we only care about the current role
+    const rolesToUse = userMode === 'sales' && currentSalesRoleId !== null 
+      ? [currentSalesRoleId] 
+      : selectedRoles;
+    
+    if (rolesToUse.length === 0) return [];
     
     // Get all products that are selected for at least one of the selected roles
     const uniqueProductIds = new Set<string>();
     
-    selectedRoles.forEach(roleId => {
+    rolesToUse.forEach(roleId => {
       const roleIncentive = roleIncentives.find(ri => ri.roleId === roleId);
       if (roleIncentive) {
-        roleIncentive.productIds.forEach(pid => uniqueProductIds.add(pid));
+        roleIncentive.productIds.forEach(pid => {
+          // In sales mode, only add sellable products
+          const product = products.find(p => p.id === pid);
+          if (product && (userMode === 'seller' || product.isSellable)) {
+            uniqueProductIds.add(pid);
+          }
+        });
       } else {
         // Use default selected products
-        products.filter(p => p.selected).forEach(p => uniqueProductIds.add(p.id));
+        products.filter(p => p.selected && (userMode === 'seller' || p.isSellable))
+          .forEach(p => uniqueProductIds.add(p.id));
       }
     });
     
@@ -169,7 +225,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       
       return {
         productId,
-        roleCombination: selectedRoles,
+        roleCombination: rolesToUse,
         combinedCommission,
         combinedBonus
       };
