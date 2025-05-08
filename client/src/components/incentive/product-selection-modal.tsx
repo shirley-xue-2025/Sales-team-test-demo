@@ -402,23 +402,21 @@ export default function ProductSelectionModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {/* Using a key on this component to force re-renders */}
-                  <React.Fragment key={`product-list-${localStateKey}`}>
-                    {products.length > 0 && currentProducts.map((product) => {
-                      // Explicitly check if this product ID is in selected IDs
-                      const isSelected = localSelectedIds.includes(product.id);
-                      
-                      // Render individual product row with memoization for performance
-                      return (
-                        <ProductRow
-                          key={`product-row-${product.id}-${isSelected ? 'selected' : 'unselected'}`}
-                          product={product}
-                          isSelected={isSelected}
-                          onToggle={handleProductToggle}
-                        />
-                      );
-                    })}
-                  </React.Fragment>
+                  {/* Render products with a key prefix to ensure re-renders */}
+                  {products.length > 0 && currentProducts.map((product) => {
+                    // Explicitly check if this product ID is in selected IDs
+                    const isSelected = localSelectedIds.includes(product.id);
+                    
+                    // Render individual product row with memoization for performance
+                    return (
+                      <ProductRow
+                        key={`product-row-${product.id}-${isSelected ? 'selected' : 'unselected'}-${localStateKey}`}
+                        product={product}
+                        isSelected={isSelected}
+                        onToggle={handleProductToggle}
+                      />
+                    );
+                  })}
                   
                   {(currentProducts.length === 0 || products.length === 0) && (
                     <tr>
