@@ -102,7 +102,9 @@ const RolesPage: React.FC = () => {
   
   const deleteRoleMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/roles/${id}`);
+      console.log('Delete mutation called for role ID:', id);
+      const res = await apiRequest('DELETE', `/api/roles/${id}`);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
@@ -113,6 +115,7 @@ const RolesPage: React.FC = () => {
       });
     },
     onError: (error) => {
+      console.error('Error in delete mutation:', error);
       showToast('Failed to delete role', {
         description: error.message || 'An error occurred while deleting the role.',
         position: 'top-center',

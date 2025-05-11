@@ -15,14 +15,22 @@ type RequestOptions = {
 };
 
 export async function apiRequest<T = any>(
+  method: string,
   url: string,
+  data?: any,
   options?: RequestOptions
-): Promise<T> {
+): Promise<Response> {
   const defaultOptions: RequestOptions = {
-    method: 'GET',
+    method,
     credentials: 'include',
-    headers: {}
+    headers: {
+      'Content-Type': 'application/json'
+    }
   };
+
+  if (data && method !== 'GET') {
+    defaultOptions.body = JSON.stringify(data);
+  }
 
   const mergedOptions = {
     ...defaultOptions,
@@ -35,7 +43,14 @@ export async function apiRequest<T = any>(
 
   const res = await fetch(url, mergedOptions as RequestInit);
   await throwIfResNotOk(res);
-  return await res.json() as T;
+  
+  // For 204 No Content responses
+  if (res.status === 204) {
+    return res;
+  }
+  
+  // For everything else, return the response object
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
