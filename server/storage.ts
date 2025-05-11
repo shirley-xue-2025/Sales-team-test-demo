@@ -61,23 +61,36 @@ export const storage = {
   },
   
   deleteRole: async (id: number): Promise<void> => {
-    // Check if this is a default role
-    const roleToDelete = await storage.getRoleById(id);
-    
-    // Delete all role-product associations first
-    await db.delete(roleProducts).where(eq(roleProducts.roleId, id));
-    
-    // Delete the role
-    await db.delete(roles).where(eq(roles.id, id));
-    
-    // If we deleted the default role, set another one as default if available
-    if (roleToDelete?.isDefault === true) {
-      const remainingRoles = await storage.getAllRoles();
-      if (remainingRoles.length > 0) {
-        await db.update(roles)
-          .set({ isDefault: true })
-          .where(eq(roles.id, remainingRoles[0].id));
+    try {
+      // Check if this is a default role
+      const roleToDelete = await storage.getRoleById(id);
+      if (!roleToDelete) {
+        throw new Error('Role not found');
       }
+      
+      console.log('Deleting role:', roleToDelete);
+      
+      // Step 1: Delete all role-product associations first
+      await db.delete(roleProducts).where(eq(roleProducts.roleId, id));
+      console.log('Deleted role-product associations');
+      
+      // Step 2: Delete the role
+      const result = await db.delete(roles).where(eq(roles.id, id));
+      console.log('Role deletion result:', result);
+      
+      // Step 3: If we deleted the default role, set another one as default if available
+      if (roleToDelete.isDefault === true) {
+        const remainingRoles = await storage.getAllRoles();
+        if (remainingRoles.length > 0) {
+          await db.update(roles)
+            .set({ isDefault: true })
+            .where(eq(roles.id, remainingRoles[0].id));
+          console.log('Updated default role');
+        }
+      }
+    } catch (error) {
+      console.error('Error in deleteRole:', error);
+      throw error; // Re-throw to handle in the route
     }
   },
   

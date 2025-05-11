@@ -137,15 +137,21 @@ const RolesPage: React.FC = () => {
     console.log("Deleting role:", id);
     const role = rolesQuery.data?.find(role => role.id === id);
     if (role) {
-      setRoleToDelete({...role});
+      // Create a deep copy of the role to avoid reference issues
+      setRoleToDelete(JSON.parse(JSON.stringify(role)));
+      // Show the proper dialog
       setIsDeleteDialogOpen(true);
     }
   }, [rolesQuery.data]);
   
   const confirmDeleteRole = useCallback(() => {
     if (roleToDelete !== null) {
+      console.log("Confirming deletion of role:", roleToDelete.id);
+      // Call the mutation to delete the role
       deleteRoleMutation.mutate(roleToDelete.id);
+      // Close the dialog
       setIsDeleteDialogOpen(false);
+      // Clear the selected role
       setRoleToDelete(null);
     }
   }, [roleToDelete, deleteRoleMutation]);

@@ -141,8 +141,21 @@ const RoleCard = ({
       {/* Middle flexible section - will stretch to fill available space */}
       <div className="flex-grow"></div>
       
-      {/* Footer section - always at bottom, members count will stay on one line */}
+      {/* Footer section - always at bottom */}
       <div className="mt-auto">
+        {/* Permissions area */}
+        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
+          <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
+          <div className="flex flex-wrap gap-2">
+            {Array.isArray(role.permissions) ? 
+              (role.permissions as string[]).map((permission: string) => (
+                <PermissionBadge key={permission} permission={permission} />
+              )) 
+            : null}
+          </div>
+        </div>
+        
+        {/* Members count - moved to the bottom */}
         <div className="border-t border-gray-200 px-5 py-3 bg-gray-50">
           <button
             onClick={handleMemberCountClick}
@@ -156,17 +169,6 @@ const RoleCard = ({
             </svg>
             <span className="truncate">{role.memberCount || 0} members</span>
           </button>
-        </div>
-        
-        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
-          <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
-          <div className="flex flex-wrap gap-2">
-            {Array.isArray(role.permissions) ? 
-              (role.permissions as string[]).map((permission: string) => (
-                <PermissionBadge key={permission} permission={permission} />
-              )) 
-            : null}
-          </div>
         </div>
       </div>
     </div>
