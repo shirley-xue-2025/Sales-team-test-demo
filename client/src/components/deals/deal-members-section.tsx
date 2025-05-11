@@ -23,17 +23,13 @@ export default function DealMembersSection({
   initialMembers = [],
   onMembersChange
 }: DealMembersSectionProps) {
-  // Sample team members - consistent with our Member page data
+  // Sample team members - only one member for Version A
   const teamMembers = [
     { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com' },
-    { id: 1410, name: 'Abdullah Khalid', email: 'abdullah.khalid@example.com' },
-    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com' },
   ];
 
-  // Default closer role ID
+  // Default closer role ID - only Closer exists in Version A
   const closerRoleId = availableRoles.find(r => r.title === "Closer")?.id || 1;
-  const setterRoleId = availableRoles.find(r => r.title === "Setter")?.id || 2;
-  const seniorCloserRoleId = availableRoles.find(r => r.title === "Senior Closer")?.id || 3;
   
   // State for tracking role assignments
   const [dealMembers, setDealMembers] = useState<DealMember[]>(initialMembers.length ? initialMembers : [

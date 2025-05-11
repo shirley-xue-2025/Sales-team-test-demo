@@ -1,20 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiRequest } from '@/lib/queryClient';
 import { showToast } from '@/components/ui/sonner';
 import RoleCard from '@/components/sales/role-card';
 import RoleForm from '@/components/sales/role-form';
+import DeleteRoleDialog from '@/components/sales/delete-role-dialog';
+import RoleRecommendationModal from '@/components/sales/role-recommendation-modal';
 import { type Role, type RoleInsert } from '@shared/schema';
+import { useLocation } from 'wouter';
+import { Sparkles } from 'lucide-react';
 
 const RolesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('members');
   const [openRoleForm, setOpenRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
-  const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState<boolean>(false);
   
   // Mock member data with proper email format
   const mockMembers = [
@@ -23,32 +28,10 @@ const RolesPage: React.FC = () => {
     { id: 416, name: "Fernando Ferreira", email: "fernando.ferreira@example.com" }
   ];
   
-  // Mock sales roles data as shown in the screenshot with updated names
-  const salesRoles = [
-    { 
-      id: 1, 
-      title: "Setter", 
-      description: "Qualifies leads and schedules appointments for closers", 
-      isDefault: true,
-      memberCount: 3 
-    },
-    { 
-      id: 2, 
-      title: "Junior Closer", 
-      description: "Responsible for converting qualified prospects into clients", 
-      isDefault: false,
-      memberCount: 0
-    },
-    { 
-      id: 3, 
-      title: "Senior Closer", 
-      description: "Handles high-value clients and complex sales situations", 
-      isDefault: false,
-      memberCount: 0
-    }
-  ];
-  
   const queryClient = useQueryClient();
+  
+  // Create a reference to the location setter function
+  const [, setLocation] = useLocation();
   
   // Queries
   const rolesQuery = useQuery<Role[]>({
@@ -77,6 +60,26 @@ const RolesPage: React.FC = () => {
     },
   });
   
+  const setRoleAsDefaultMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('PUT', `/api/roles/${id}/default`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      showToast('Default role updated', {
+        description: 'The default role has been updated successfully.',
+        position: 'top-center',
+      });
+    },
+    onError: (error) => {
+      showToast('Failed to update default role', {
+        description: error.message || 'An error occurred while updating the default role.',
+        position: 'top-center',
+      });
+    },
+  });
+  
   const updateRoleMutation = useMutation({
     mutationFn: async ({ id, role }: { id: number, role: RoleInsert }) => {
       const res = await apiRequest('PUT', `/api/roles/${id}`, role);
@@ -99,7 +102,9 @@ const RolesPage: React.FC = () => {
   
   const deleteRoleMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/roles/${id}`);
+      console.log('Delete mutation called for role ID:', id);
+      const res = await apiRequest('DELETE', `/api/roles/${id}`);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
@@ -110,6 +115,7 @@ const RolesPage: React.FC = () => {
       });
     },
     onError: (error) => {
+      console.error('Error in delete mutation:', error);
       showToast('Failed to delete role', {
         description: error.message || 'An error occurred while deleting the role.',
         position: 'top-center',
@@ -118,35 +124,88 @@ const RolesPage: React.FC = () => {
   });
   
   // Event handlers
-  const handleAddRole = () => {
+  const handleAddRole = useCallback(() => {
     setSelectedRole(undefined);
     setOpenRoleForm(true);
-  };
+  }, []);
   
-  const handleEditRole = (role: Role) => {
-    setSelectedRole(role);
+  const handleEditRole = useCallback((role: Role) => {
+    console.log("Editing role:", role);
+    // Create a deep copy of the role to avoid any reference issues
+    setSelectedRole(JSON.parse(JSON.stringify(role)));
     setOpenRoleForm(true);
-  };
+  }, []);
   
-  const handleDeleteRole = (id: number) => {
-    setRoleToDelete(id);
-  };
+  const handleDeleteRole = useCallback((id: number) => {
+    console.log("Deleting role:", id);
+    const role = rolesQuery.data?.find(role => role.id === id);
+    if (role) {
+      // Create a deep copy of the role to avoid reference issues
+      setRoleToDelete(JSON.parse(JSON.stringify(role)));
+      // Show the proper dialog
+      setIsDeleteDialogOpen(true);
+    }
+  }, [rolesQuery.data]);
   
-  const confirmDeleteRole = () => {
+  const confirmDeleteRole = useCallback(() => {
     if (roleToDelete !== null) {
-      deleteRoleMutation.mutate(roleToDelete);
+      console.log("Confirming deletion of role:", roleToDelete.id);
+      // Call the mutation to delete the role
+      deleteRoleMutation.mutate(roleToDelete.id);
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
+      // Clear the selected role
       setRoleToDelete(null);
     }
-  };
+  }, [roleToDelete, deleteRoleMutation]);
   
-  const handleFormSubmit = (data: RoleInsert) => {
+  const handleFormSubmit = useCallback((data: RoleInsert) => {
+    console.log("Form submitted with data:", data);
+    
     if (selectedRole) {
+      console.log("Updating role:", selectedRole.id, data);
       updateRoleMutation.mutate({ id: selectedRole.id, role: data });
     } else {
+      console.log("Creating new role:", data);
       createRoleMutation.mutate(data);
     }
+    
     setOpenRoleForm(false);
-  };
+  }, [selectedRole, updateRoleMutation, createRoleMutation]);
+  
+  const handleSetAsDefault = useCallback((roleId: number) => {
+    setRoleAsDefaultMutation.mutate(roleId);
+  }, [setRoleAsDefaultMutation]);
+  
+  const handleConfigureIncentive = useCallback((roleId: number) => {
+    // Navigate to incentive plan page with this role selected
+    setLocation(`/incentive-plan?roleId=${roleId}`);
+  }, [setLocation]);
+  
+  // Handler for opening the role recommendation modal
+  const handleOpenRecommendation = useCallback(() => {
+    setIsRecommendationModalOpen(true);
+  }, []);
+  
+  // Handler for handling a selected recommendation 
+  const handleRecommendationSelect = useCallback((roleData: { title: string; description: string; permissions: string[] }) => {
+    // Create a new role data object from the recommendation
+    const newRole: RoleInsert = {
+      title: roleData.title,
+      description: roleData.description,
+      permissions: roleData.permissions,
+      isDefault: false,
+    };
+    
+    // Create the new role
+    createRoleMutation.mutate(newRole);
+    
+    // Show success message
+    showToast('AI-recommended role added', {
+      description: `The ${roleData.title} role has been added to your sales team.`,
+      position: 'top-center',
+    });
+  }, [createRoleMutation]);
   
   // Render loading skeletons
   const renderSkeletons = () => {
@@ -207,16 +266,25 @@ const RolesPage: React.FC = () => {
         </h1>
         <div className="flex space-x-3">
           {activeTab === 'roles' ? (
-            <Button 
-              onClick={handleAddRole}
-              className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Create role
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleOpenRecommendation}
+                className="text-sm h-9 px-4 py-2 rounded-sm border border-green-600 bg-white text-green-600 hover:bg-green-50"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Recommended Roles
+              </Button>
+              <Button 
+                onClick={handleAddRole}
+                className="text-sm h-9 px-4 py-2 rounded-sm bg-gray-900 text-white hover:bg-gray-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create role
+              </Button>
+            </div>
           ) : (
             <>
               <Button variant="outline" className="text-sm h-9 px-4 py-2 rounded-md border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
@@ -336,42 +404,23 @@ const RolesPage: React.FC = () => {
           
           {activeTab === 'roles' && (
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
-              {salesRoles.map((role) => (
-                <div key={role.id} className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                  <div className="flex justify-between items-start p-5">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-base font-medium text-gray-900">{role.title}</h3>
-                        {role.isDefault && (
-                          <span className="px-2 py-0.5 text-xs rounded-sm bg-gray-100 text-gray-600">Default</span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-gray-600">{role.description}</p>
-                    </div>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="19" cy="12" r="1"></circle>
-                        <circle cx="5" cy="12" r="1"></circle>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                      {role.memberCount} members
-                    </div>
-                    <button className="text-xs px-3 py-1 bg-white border border-gray-300 rounded-sm text-gray-600 hover:bg-gray-50">
-                      Configure
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {rolesQuery.isLoading ? (
+                renderSkeletons()
+              ) : rolesQuery.data && rolesQuery.data.length > 0 ? (
+                rolesQuery.data.map((role) => (
+                  <RoleCard
+                    key={role.id}
+                    role={role}
+                    onEdit={handleEditRole}
+                    onDelete={handleDeleteRole}
+                    onConfigureIncentive={handleConfigureIncentive}
+                    onSetAsDefault={handleSetAsDefault}
+                    totalRoles={rolesQuery.data.length}
+                  />
+                ))
+              ) : (
+                renderEmptyState()
+              )}
             </div>
           )}
         </div>
@@ -386,26 +435,23 @@ const RolesPage: React.FC = () => {
       />
       
       {/* Delete confirmation dialog */}
-      <AlertDialog open={roleToDelete !== null} onOpenChange={(isOpen) => !isOpen && setRoleToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              role and remove it from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteRole}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteRoleDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) setRoleToDelete(null);
+        }}
+        role={roleToDelete}
+        onConfirm={confirmDeleteRole}
+      />
+      
+      {/* Role recommendation modal */}
+      <RoleRecommendationModal
+        open={isRecommendationModalOpen}
+        onOpenChange={setIsRecommendationModalOpen}
+        onSelect={handleRecommendationSelect}
+        currentRoles={rolesQuery.data || []}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Role } from '@/lib/types';
 import { RoleInsert } from '@shared/schema';
 import { Settings, MoreVertical } from 'lucide-react';
@@ -11,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import RoleForm from '@/components/sales/role-form';
 import { showToast } from '@/components/ui/sonner';
+import { useLocation } from 'wouter';
 
 interface Member {
   id: number;
@@ -20,11 +22,13 @@ interface Member {
 }
 
 export default function MembersPage() {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('active');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [roleFormOpen, setRoleFormOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   // We're using Role from lib/types but RoleForm expects Role from shared/schema
   // This is a temporary solution for the type compatibility
   const [selectedRole, setSelectedRole] = useState<any>(undefined);
@@ -58,18 +62,17 @@ export default function MembersPage() {
     },
   });
 
-  // Mock members data - matching our three roles (1=Closer, 2=Setter, 3=Senior Closer)
-  const members: Member[] = [
-    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 1 }, // Closer (default role)
-    { id: 1410, name: 'Abdullah Khalid', email: 'abdullah.khalid@example.com', roleId: 2 }, // Setter
-    { id: 416, name: 'Fernando Ferreira', email: 'fernando.ferreira@example.com', roleId: 3 }, // Senior Closer
-  ];
+  // Mock members data with state - using only Closer role
+  const [members, setMembers] = useState<Member[]>([
+    { id: 1411, name: 'Muhammad Gunes', email: 'muhammad.gunes@example.com', roleId: 5 }, // Closer role
+    { id: 1422, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', roleId: 5 }, // Closer role
+    { id: 1437, name: 'David Chen', email: 'david.chen@example.com', roleId: 5 }, // Closer role
+  ]);
 
-  // Mock pending invitations
-  const invitations = [
-    { email: 'john.doe@example.com', roleId: 1, sentAt: '2023-05-01T10:00:00Z' }, // Closer (default role)
-    { email: 'jane.smith@example.com', roleId: 3, sentAt: '2023-05-02T14:30:00Z' }, // Senior Closer
-  ];
+  // Mock pending invitations with state
+  const [invitations, setInvitations] = useState([
+    { email: 'john.doe@example.com', roleId: 5, sentAt: '2023-05-01T10:00:00Z' }, // Closer role
+  ]);
 
   const handleSendInvitation = () => {
     // In a real app, this would send an API request
@@ -87,15 +90,37 @@ export default function MembersPage() {
   };
   
   const handleFormSubmit = (data: RoleInsert) => {
-    createRoleMutation.mutate(data);
+    if (selectedRole) {
+      // Update existing role
+      console.log("Updating role:", selectedRole.id, data);
+      // Call the API to update the role
+      apiRequest('PUT', `/api/roles/${selectedRole.id}`, data)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+          showToast('Role updated successfully', {
+            description: 'The role has been updated in the system.',
+            position: 'top-center',
+          });
+        })
+        .catch(error => {
+          showToast('Failed to update role', {
+            description: error.message || 'An error occurred while updating the role.',
+            position: 'top-center',
+          });
+        });
+    } else {
+      // Create new role
+      createRoleMutation.mutate(data);
+    }
     setRoleFormOpen(false);
+    setSelectedRole(undefined);
   };
 
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">
-          {activeTab === 'roles' ? 'Sales Roles' : 'Members (MEB)'}
+          {activeTab === 'roles' ? 'Sales Roles' : 'My Sales Team'}
         </h1>
         <div className="flex space-x-2">
           {activeTab === 'roles' ? (
@@ -117,22 +142,6 @@ export default function MembersPage() {
               Invite members
             </Button>
           )}
-        </div>
-      </div>
-
-      {/* Warning Banner */}
-      <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-6 flex justify-between items-center">
-        <div className="flex items-center">
-          <div className="text-red-500 mr-2">⚠</div>
-          <span className="text-sm">You've reached your current member limit. Upgrade your plan now and let your team continue to grow.</span>
-        </div>
-        <div className="flex space-x-2">
-          <Button size="sm" variant="default" className="h-8 bg-green-600 hover:bg-green-700">
-            Upgrade
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8">
-            Hide
-          </Button>
         </div>
       </div>
 
@@ -165,10 +174,20 @@ export default function MembersPage() {
                     <td className="px-4 py-3">{member.name}</td>
                     <td className="px-4 py-3 text-sm">{member.email}</td>
                     <td className="px-4 py-3">
-                      <Select defaultValue={member.roleId.toString()} onValueChange={(value) => {
-                        console.log(`Changing ${member.name}'s role to ${value}`);
-                        // In a real app, this would update the member's role via API
-                      }}>
+                      <Select 
+                        value={member.roleId.toString()} 
+                        onValueChange={(value) => {
+                          console.log(`Changing ${member.name}'s role to ${value}`);
+                          // Update the member in our state
+                          const roleId = parseInt(value);
+                          setMembers(prevMembers => 
+                            prevMembers.map(m => 
+                              m.id === member.id ? { ...m, roleId } : m
+                            )
+                          );
+                          // In a real app, this would also update via API
+                        }}
+                      >
                         <SelectTrigger className="h-8 text-sm w-44">
                           <SelectValue placeholder="Select role">
                             {memberRole?.title || "Select role"}
@@ -213,10 +232,20 @@ export default function MembersPage() {
                   <tr key={index} className="border-b">
                     <td className="px-4 py-3">{invitation.email}</td>
                     <td className="px-4 py-3">
-                      <Select defaultValue={invitation.roleId.toString()} onValueChange={(value) => {
-                        console.log(`Changing ${invitation.email}'s role to ${value}`);
-                        // In a real app, this would update the invitation's role via API
-                      }}>
+                      <Select 
+                        value={invitation.roleId.toString()} 
+                        onValueChange={(value) => {
+                          console.log(`Changing ${invitation.email}'s role to ${value}`);
+                          // Update the invitation in our state
+                          const roleId = parseInt(value);
+                          setInvitations(prevInvitations => 
+                            prevInvitations.map((inv, idx) => 
+                              idx === index ? { ...inv, roleId } : inv
+                            )
+                          );
+                          // In a real app, this would also update via API
+                        }}
+                      >
                         <SelectTrigger className="h-8 text-sm w-44">
                           <SelectValue placeholder="Select role">
                             {invitationRole?.title || "Select role"}
@@ -264,15 +293,88 @@ export default function MembersPage() {
                     </div>
                     <p className="mt-1 text-sm text-gray-600">{role.description}</p>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="1"></circle>
-                      <circle cx="19" cy="12" r="1"></circle>
-                      <circle cx="5" cy="12" r="1"></circle>
-                    </svg>
-                  </button>
+                  <div className="relative">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="text-gray-400 hover:text-gray-600 focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                          </svg>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[200px]">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => {
+                            setSelectedRole(role);
+                            setRoleFormOpen(true);
+                          }}
+                        >
+                          Edit role
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => {
+                            setLocation(`/incentive-plan?roleId=${role.id}`);
+                          }}
+                        >
+                          Configure incentive plan
+                        </DropdownMenuItem>
+                        
+                        {!role.isDefault && (
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => {
+                              // In a real app, API call to set as default would go here
+                              console.log("Setting role as default:", role.id);
+                            }}
+                          >
+                            Set as default
+                          </DropdownMenuItem>
+                        )}
+                        
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-red-600 cursor-pointer"
+                          disabled={roles.length <= 1}
+                          onClick={() => {
+                            if (roles.length > 1) {
+                              // Confirm before deleting
+                              if (confirm(`Are you sure you want to delete the ${role.title} role?`)) {
+                                // In a real app, this would make an API call to delete the role
+                                console.log("Deleting role:", role.id);
+                                
+                                // Make API call to delete the role
+                                apiRequest('DELETE', `/api/roles/${role.id}`)
+                                  .then(() => {
+                                    // Invalidate queries to update data
+                                    queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+                                    
+                                    showToast('Role removed', {
+                                      description: `The ${role.title} role has been removed.`,
+                                      position: 'top-center',
+                                    });
+                                  })
+                                  .catch(error => {
+                                    console.error("Error deleting role:", error);
+                                    showToast('Failed to delete role', {
+                                      description: 'An error occurred while deleting the role.',
+                                      position: 'top-center',
+                                    });
+                                  });
+                              }
+                            }
+                          }}
+                        >
+                          Remove role
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center">
                   <div className="flex items-center text-sm text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -282,9 +384,6 @@ export default function MembersPage() {
                     </svg>
                     {members.filter(m => m.roleId === role.id).length} members
                   </div>
-                  <button className="text-xs px-3 py-1 bg-white border border-gray-300 rounded-sm text-gray-600 hover:bg-gray-50">
-                    Configure
-                  </button>
                 </div>
               </div>
             ))}

@@ -2,34 +2,106 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import RoleComparison from '@/components/incentive/role-comparison';
 import { useIncentiveStore } from '@/lib/incentiveStore';
-import { Role } from '@/lib/types';
+import { Role, Product } from '@/lib/types';
+
+// Static component that doesn't rely on state subscriptions from Zustand
+const IncentivePlanContent = ({
+  roles,
+  products,
+  selectedRoles,
+  combinedIncentives,
+  isEditMode,
+  onEditClick,
+  onRoleSelectionChange,
+  onProductSelectionChange
+}: {
+  roles: Role[];
+  products: Product[];
+  selectedRoles: number[];
+  combinedIncentives: any;
+  isEditMode: boolean;
+  onEditClick: () => void;
+  onRoleSelectionChange: (roleId: number) => void;
+  onProductSelectionChange: (productIds: string[]) => void;
+}) => {
+  return (
+    <div className="container mx-auto py-6 px-4 max-w-6xl">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-800">Incentive plan</h1>
+          <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-sm">
+            default plan
+          </span>
+        </div>
+      </div>
+      
+      <RoleComparison 
+        roles={roles}
+        products={products}
+        selectedRoles={selectedRoles}
+        combinedIncentives={combinedIncentives}
+        onRoleSelectionChange={onRoleSelectionChange}
+        isEditMode={isEditMode}
+        onEditClick={onEditClick}
+        onProductSelectionChange={onProductSelectionChange}
+      />
+    </div>
+  );
+};
 
 const IncentivePlanPage: React.FC = () => {
-  // Get roles data from API or use mock data
-  const { data: apiRoles } = useQuery<Role[]>({
-    queryKey: ['/api/roles'],
-  });
-  
   // Local state for edit mode
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Get store state and actions
-  const {
-    products,
-    roles: storeRoles,
-    setRoles,
-    selectedRoles,
-    toggleRoleSelection,
-    toggleProductSelection,
-    calculateCombinedIncentives
-  } = useIncentiveStore();
+  // Get API data and Zustand state
+  const { data: apiRoles } = useQuery<Role[]>({ queryKey: ['/api/roles'] });
+  const { data: apiProducts } = useQuery<Product[]>({ queryKey: ['/api/products'] });
   
-  // Once API data is loaded, update store with updated role names
+  const roles = useIncentiveStore(state => state.roles);
+  const selectedRoles = useIncentiveStore(state => state.selectedRoles);
+  const toggleRoleSelection = useIncentiveStore(state => state.toggleRoleSelection);
+  const toggleProductSelection = useIncentiveStore(state => state.toggleProductSelection);
+  const setRoles = useIncentiveStore(state => state.setRoles);
+  const products = useIncentiveStore(state => state.products);
+  const getAllProducts = useIncentiveStore(state => state.getAllProducts);
+  const calculateCombinedIncentives = useIncentiveStore(state => state.calculateCombinedIncentives);
+  
+  // Fetch products when component mounts and on page refresh
+  useEffect(() => {
+    const fetchProductsData = async () => {
+      try {
+        console.log('Fetching initial products data from server');
+        // This waits for the product data to be fully loaded before rendering
+        await useIncentiveStore.getState().fetchProducts();
+        
+        // Force a UI refresh
+        useIncentiveStore.getState().setMode(useIncentiveStore.getState().mode);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+    
+    fetchProductsData();
+    
+    // Also fetch products data when window is focused/refocused
+    // This helps keep the UI in sync with server state after page refresh
+    const handleFocus = () => {
+      console.log('Window focused, refreshing products data');
+      fetchProductsData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Initialize roles from API when they load
   useEffect(() => {
     if (apiRoles?.length) {
-      // Map Sales Manager → Setter, Sales Representative → Junior Closer, Junior Sales → Senior Closer
+      // Map API roles to our format
       const updatedRoles = apiRoles.map(role => {
-        // Update the role names and descriptions if needed
         let title = role.title;
         let description = role.description;
         
@@ -44,101 +116,80 @@ const IncentivePlanPage: React.FC = () => {
           description = "Handles high-value clients and complex sales situations";
         }
         
-        return {
-          ...role,
-          title,
-          description
-        };
+        return { ...role, title, description };
       });
       
+      // Set roles in store
       setRoles(updatedRoles);
       
-      // Pre-select all roles by default if no roles are selected yet
-      if (selectedRoles.length === 0 && updatedRoles.length > 0) {
-        updatedRoles.forEach(role => toggleRoleSelection(role.id));
+      // Pre-select all roles by default
+      if (selectedRoles.length === 0) {
+        updatedRoles.forEach(role => {
+          toggleRoleSelection(role.id);
+        });
       }
+      
+      // Re-fetch products since we now have roles
+      useIncentiveStore.getState().fetchProducts();
     }
-  }, [apiRoles, setRoles, selectedRoles.length, toggleRoleSelection]);
+  }, [apiRoles, setRoles]);
   
-  // Toggle edit mode
-  const handleEditClick = () => {
-    setIsEditMode(!isEditMode);
+  // Simple event handlers
+  const handleEditClick = () => setIsEditMode(prev => !prev);
+  
+  const handleProductSelectionChange = async (productIds: string[]) => {
+    try {
+      console.log('Product selection change handler called with:', productIds);
+      
+      // If no roles are selected, we can't assign products
+      if (selectedRoles.length === 0) {
+        console.warn('No roles selected, cannot assign products');
+        return;
+      }
+      
+      // Update all selected roles with the new product selection
+      for (const roleId of selectedRoles) {
+        console.log(`Updating products for role ${roleId} with:`, productIds);
+        
+        // Use the store's updateRoleProducts method to save to backend
+        await useIncentiveStore.getState().updateRoleProducts(roleId, productIds);
+      }
+      
+      // Set edit mode if adding new products
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
+      
+      // Refresh the products data to ensure UI is in sync with backend
+      await useIncentiveStore.getState().fetchProducts();
+      
+      console.log('Product selection updated successfully');
+    } catch (error) {
+      console.error('Failed to update product selection:', error);
+    }
   };
   
-  // Handle product selection changes
-  const handleProductSelectionChange = (productIds: string[]) => {
-    // For this demo, we're simulating the effect by toggling each product's selection
-    // In a real app, this would update a database or store
-    
-    // First, identify which products were added or removed
-    const currentSelectedIds = products.filter(p => p.selected).map(p => p.id);
-    const added = productIds.filter(id => !currentSelectedIds.includes(id));
-    const removed = currentSelectedIds.filter(id => !productIds.includes(id));
-    
-    // Update product selections
-    added.forEach(id => {
-      // For a newly added product, find the first role to assign to
-      if (selectedRoles.length > 0) {
-        toggleProductSelection(id, selectedRoles[0], true);
-      }
-    });
-    
-    removed.forEach(id => {
-      // For a removed product, remove from all roles
-      selectedRoles.forEach(roleId => {
-        toggleProductSelection(id, roleId, false);
-      });
-    });
-    
-    // If we added new products, switch to edit mode to allow setting values
-    if (added.length > 0 && !isEditMode) {
-      setIsEditMode(true);
-    }
-  };
+  // Prepare data for the static component
+  const allProducts = getAllProducts();
+  const incentives = calculateCombinedIncentives();
   
+  // Debug logs for troubleshooting
+  console.log('Selected Roles:', selectedRoles);
+  console.log('All Products:', allProducts);
+  console.log('Combined Incentives:', incentives);
+  
+  // Render the static component with data
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-800">Incentive plan</h1>
-          <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-sm">
-            default plan
-          </span>
-        </div>
-      </div>
-      
-      {/* Warning banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 mb-6">
-        <div className="flex items-start">
-          <div className="flex-shrink-0 mt-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-amber-800">Role-based incentives</h3>
-            <div className="mt-1 text-sm text-amber-700">
-              Configure commission percentages and bonus amounts for your sales team roles. 
-              Use the checkboxes to select which roles to include in the total calculations.
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Role Comparison View */}
-      <RoleComparison 
-        roles={storeRoles}
-        products={products}
-        selectedRoles={selectedRoles}
-        combinedIncentives={calculateCombinedIncentives()}
-        onRoleSelectionChange={toggleRoleSelection}
-        isEditMode={isEditMode}
-        onEditClick={handleEditClick}
-        onProductSelectionChange={handleProductSelectionChange}
-      />
-    </div>
+    <IncentivePlanContent
+      roles={roles}
+      products={allProducts}
+      selectedRoles={selectedRoles}
+      combinedIncentives={incentives}
+      isEditMode={isEditMode}
+      onEditClick={handleEditClick}
+      onRoleSelectionChange={toggleRoleSelection}
+      onProductSelectionChange={handleProductSelectionChange}
+    />
   );
 };
 

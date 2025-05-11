@@ -1,90 +1,226 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { ArrowUpRight, ArrowDownRight, TrendingUp, DollarSign, Users, Package } from 'lucide-react';
 
 const Home: React.FC = () => {
-  const { data: roleCount } = useQuery<number>({
-    queryKey: ['/api/roles/count'],
-  });
+  // Mock data for the sales dashboard
+  const revenueData = [
+    { name: 'Jan', sales: 18000 },
+    { name: 'Feb', sales: 24000 },
+    { name: 'Mar', sales: 29000 },
+    { name: 'Apr', sales: 34000 },
+    { name: 'May', sales: 39000 },
+  ];
+
+  const salesByProductData = [
+    { name: 'Product A', value: 45 },
+    { name: 'Product B', value: 28 },
+    { name: 'Product C', value: 17 },
+    { name: 'Other', value: 10 },
+  ];
+
+  const COLORS = ['#4ade80', '#60a5fa', '#f97316', '#a78bfa'];
+
+  const teamPerformance = [
+    { name: 'Muhammad Gunes', deals: 7, revenue: '$47,500' },
+    { name: 'Sarah Johnson', deals: 5, revenue: '$32,800' },
+    { name: 'David Chen', deals: 6, revenue: '$41,200' },
+  ];
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Sales Team Dashboard</h1>
         <p className="text-gray-600">
-          Welcome to the sales team management system. Manage your team's roles and permissions.
+          Track your team's performance and key sales metrics.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-4">
-              <div className="rounded-full bg-primary-100 p-3 w-12 h-12 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
+          <CardContent className="flex items-center py-6">
+            <div className="rounded-full bg-green-100 p-3 mr-4">
+              <DollarSign className="h-5 w-5 text-green-700" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+              <div className="flex items-center">
+                <h3 className="text-2xl font-bold">$121,500</h3>
+                <span className="flex items-center text-green-600 text-sm ml-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  12%
+                </span>
               </div>
-              <h3 className="text-xl font-semibold">Sales Roles</h3>
-              <p className="text-gray-500">
-                {roleCount !== undefined ? `${roleCount} roles configured` : 'Loading roles...'}
-              </p>
-              <Link href="/roles">
-                <Button className="mt-2 w-full">
-                  Manage Roles
-                </Button>
-              </Link>
             </div>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-4">
-              <div className="rounded-full bg-blue-100 p-3 w-12 h-12 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H4a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="8" cy="7" r="4"></circle>
-                  <line x1="18" y1="8" x2="23" y2="13"></line>
-                  <line x1="23" y1="8" x2="18" y2="13"></line>
-                </svg>
+          <CardContent className="flex items-center py-6">
+            <div className="rounded-full bg-blue-100 p-3 mr-4">
+              <TrendingUp className="h-5 w-5 text-blue-700" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Deals Closed</p>
+              <div className="flex items-center">
+                <h3 className="text-2xl font-bold">18</h3>
+                <span className="flex items-center text-green-600 text-sm ml-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  8%
+                </span>
               </div>
-              <h3 className="text-xl font-semibold">Team Assignment</h3>
-              <p className="text-gray-500">
-                Assign team members to roles
-              </p>
-              <Button variant="outline" disabled className="mt-2 w-full">
-                Coming Soon
-              </Button>
             </div>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-4">
-              <div className="rounded-full bg-amber-100 p-3 w-12 h-12 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
+          <CardContent className="flex items-center py-6">
+            <div className="rounded-full bg-amber-100 p-3 mr-4">
+              <Package className="h-5 w-5 text-amber-700" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Avg. Deal Size</p>
+              <div className="flex items-center">
+                <h3 className="text-2xl font-bold">$6,750</h3>
+                <span className="flex items-center text-red-600 text-sm ml-2">
+                  <ArrowDownRight className="h-4 w-4" />
+                  3%
+                </span>
               </div>
-              <h3 className="text-xl font-semibold">Permission Settings</h3>
-              <p className="text-gray-500">
-                Configure detailed permissions
-              </p>
-              <Button variant="outline" disabled className="mt-2 w-full">
-                Coming Soon
-              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="flex items-center py-6">
+            <div className="rounded-full bg-purple-100 p-3 mr-4">
+              <Users className="h-5 w-5 text-purple-700" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Team Members</p>
+              <div className="flex items-center">
+                <h3 className="text-2xl font-bold">3</h3>
+                <span className="flex items-center text-green-600 text-sm ml-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  New
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts & Analytics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Monthly Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={revenueData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value) => [`$${value}`, 'Sales']}
+                  />
+                  <Bar dataKey="sales" fill="#4ade80" barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Sales by Product</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={salesByProductData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {salesByProductData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Team Performance Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b">
+                <tr>
+                  <th className="text-left p-3 font-medium text-gray-500">TEAM MEMBER</th>
+                  <th className="text-left p-3 font-medium text-gray-500">ROLE</th>
+                  <th className="text-left p-3 font-medium text-gray-500">DEALS CLOSED</th>
+                  <th className="text-left p-3 font-medium text-gray-500">REVENUE GENERATED</th>
+                  <th className="p-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {teamPerformance.map((member, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="p-3">{member.name}</td>
+                    <td className="p-3">Closer</td>
+                    <td className="p-3">{member.deals}</td>
+                    <td className="p-3">{member.revenue}</td>
+                    <td className="p-3 text-right">
+                      <Link href="/members">
+                        <Button variant="ghost" size="sm">View Details</Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Link href="/members">
+              <Button className="bg-green-600 hover:bg-green-700">
+                View All Team Members
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

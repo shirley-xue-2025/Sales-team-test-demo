@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Filter, Search, Edit, Eye } from 'lucide-react';
 
 interface Deal {
@@ -115,10 +116,17 @@ export default function SalesMemberDeals() {
     }
   ];
 
-  // State for pagination
+  // State for tabs, pagination and filtering
+  const [activeTab, setActiveTab] = useState('all'); // 'all' or 'my'
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const totalEntries = deals.length;
+  
+  // Filter deals based on active tab
+  const filteredDeals = activeTab === 'all' 
+    ? deals 
+    : deals.filter(deal => deal.id !== '1765980' && deal.id !== '1746732'); // Simplified filter for demo
+  
+  const totalEntries = filteredDeals.length;
   const totalPages = Math.ceil(totalEntries / entriesPerPage);
 
   // Status badge styling
@@ -166,8 +174,22 @@ export default function SalesMemberDeals() {
         </Button>
       </div>
 
-      {/* Deals Table */}
+      {/* Deal Tabs and Table */}
       <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
+        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <Tabs 
+            defaultValue="all" 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-2 w-56">
+              <TabsTrigger value="all">All Deals</TabsTrigger>
+              <TabsTrigger value="my">My Deals</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -198,7 +220,7 @@ export default function SalesMemberDeals() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {deals.map((deal) => (
+            {filteredDeals.map((deal) => (
               <tr key={deal.id} className="hover:bg-gray-50">
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                   {deal.id}

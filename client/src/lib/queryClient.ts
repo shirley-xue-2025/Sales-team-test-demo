@@ -7,19 +7,49 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+type RequestOptions = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+  credentials?: RequestCredentials;
+};
+
+export async function apiRequest<T = any>(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  data?: any,
+  options?: RequestOptions
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const defaultOptions: RequestOptions = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
 
+  if (data && method !== 'GET') {
+    defaultOptions.body = JSON.stringify(data);
+  }
+
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options?.headers
+    }
+  };
+
+  const res = await fetch(url, mergedOptions as RequestInit);
   await throwIfResNotOk(res);
+  
+  // For 204 No Content responses
+  if (res.status === 204) {
+    return res;
+  }
+  
+  // For everything else, return the response object
   return res;
 }
 

@@ -4,6 +4,16 @@ import App from "./App";
 import "./index.css";
 import * as stylingReset from "sonner";
 
+// Extend Window interface to include our custom dropdown property
+declare global {
+  interface Window {
+    __openDropdownId: string | null;
+  }
+}
+
+// Initialize the global variable
+window.__openDropdownId = null;
+
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
     <Helmet>
