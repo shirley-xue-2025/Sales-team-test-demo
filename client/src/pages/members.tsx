@@ -11,6 +11,7 @@ import { Settings, MoreVertical } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import RoleForm from '@/components/sales/role-form';
+import DeleteRoleDialog from '@/components/sales/delete-role-dialog';
 import { showToast } from '@/components/ui/sonner';
 import { useLocation } from 'wouter';
 
@@ -32,6 +33,10 @@ export default function MembersPage() {
   // We're using Role from lib/types but RoleForm expects Role from shared/schema
   // This is a temporary solution for the type compatibility
   const [selectedRole, setSelectedRole] = useState<any>(undefined);
+  
+  // New state for delete role dialog
+  const [deleteRoleDialogOpen, setDeleteRoleDialogOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   
   const queryClient = useQueryClient();
 
@@ -139,6 +144,36 @@ export default function MembersPage() {
     }
     setRoleFormOpen(false);
     setSelectedRole(undefined);
+  };
+  
+  // Handle role deletion
+  const handleDeleteRole = () => {
+    if (roleToDelete) {
+      console.log("Deleting role:", roleToDelete.id);
+      
+      // Make API call to delete the role
+      apiRequest('DELETE', `/api/roles/${roleToDelete.id}`)
+        .then(() => {
+          // Invalidate queries to update data
+          queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+          
+          showToast('Role removed', {
+            description: `The ${roleToDelete.title} role has been removed.`,
+            position: 'top-center',
+          });
+          
+          // Close the dialog and clear the role to delete
+          setDeleteRoleDialogOpen(false);
+          setRoleToDelete(null);
+        })
+        .catch(error => {
+          console.error("Error deleting role:", error);
+          showToast('Failed to delete role', {
+            description: 'An error occurred while deleting the role.',
+            position: 'top-center',
+          });
+        });
+    }
   };
 
   return (
@@ -353,8 +388,25 @@ export default function MembersPage() {
                           <DropdownMenuItem 
                             className="flex items-center gap-2 cursor-pointer"
                             onClick={() => {
-                              // In a real app, API call to set as default would go here
                               console.log("Setting role as default:", role.id);
+                              // Make API call to set role as default
+                              apiRequest('PUT', `/api/roles/${role.id}/default`)
+                                .then(() => {
+                                  // Invalidate queries to update data
+                                  queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+                                  
+                                  showToast('Default role updated', {
+                                    description: `${role.title} is now the default role for new members.`,
+                                    position: 'top-center',
+                                  });
+                                })
+                                .catch(error => {
+                                  console.error("Error setting default role:", error);
+                                  showToast('Failed to update default role', {
+                                    description: 'An error occurred while updating the default role.',
+                                    position: 'top-center',
+                                  });
+                                });
                             }}
                           >
                             Set as default
@@ -366,30 +418,9 @@ export default function MembersPage() {
                           disabled={roles.length <= 1}
                           onClick={() => {
                             if (roles.length > 1) {
-                              // Confirm before deleting
-                              if (confirm(`Are you sure you want to delete the ${role.title} role?`)) {
-                                // In a real app, this would make an API call to delete the role
-                                console.log("Deleting role:", role.id);
-                                
-                                // Make API call to delete the role
-                                apiRequest('DELETE', `/api/roles/${role.id}`)
-                                  .then(() => {
-                                    // Invalidate queries to update data
-                                    queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
-                                    
-                                    showToast('Role removed', {
-                                      description: `The ${role.title} role has been removed.`,
-                                      position: 'top-center',
-                                    });
-                                  })
-                                  .catch(error => {
-                                    console.error("Error deleting role:", error);
-                                    showToast('Failed to delete role', {
-                                      description: 'An error occurred while deleting the role.',
-                                      position: 'top-center',
-                                    });
-                                  });
-                              }
+                              // Set role to delete and open dialog
+                              setRoleToDelete(role);
+                              setDeleteRoleDialogOpen(true);
                             }
                           }}
                         >
@@ -450,7 +481,21 @@ export default function MembersPage() {
                   Create new role
                 </Button>
               </div>
-              <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
+              <Select 
+                value={selectedRoleId} 
+                onValueChange={setSelectedRoleId}
+                onOpenChange={(open) => {
+                  // When dropdown opens, if no role selected, pre-select the default role
+                  if (open && (!selectedRoleId || selectedRoleId === '')) {
+                    const defaultRole = roles.find(role => role.isDefault === true);
+                    if (defaultRole) {
+                      setSelectedRoleId(defaultRole.id.toString());
+                    } else if (roles.length > 0) {
+                      setSelectedRoleId(roles[0].id.toString());
+                    }
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -458,13 +503,23 @@ export default function MembersPage() {
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id.toString()}>
                       <div>
-                        <div className="font-medium">{role.title}</div>
+                        <div className="font-medium">
+                          {role.title}
+                          {role.isDefault && (
+                            <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-sm">Default</span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-500">{role.description}</div>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {roles.find(role => role.isDefault) ? 
+                  `Default role will be assigned if none is selected.` : 
+                  'Please select a role for this member.'}
+              </p>
             </div>
           </div>
           
@@ -489,6 +544,14 @@ export default function MembersPage() {
         onOpenChange={setRoleFormOpen}
         initialData={selectedRole}
         onSubmit={handleFormSubmit}
+      />
+      
+      {/* Delete Role Confirmation Dialog */}
+      <DeleteRoleDialog
+        open={deleteRoleDialogOpen}
+        onOpenChange={setDeleteRoleDialogOpen}
+        role={roleToDelete}
+        onConfirm={handleDeleteRole}
       />
     </div>
   );
