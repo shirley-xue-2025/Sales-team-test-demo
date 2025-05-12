@@ -231,6 +231,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message || 'Failed to fetch products' });
     }
   });
+  
+  // Get team products (products available across all roles)
+  app.get(`${apiPrefix}/team-products`, async (_req, res) => {
+    try {
+      const products = await storage.getTeamProducts();
+      res.json(products);
+    } catch (error: any) {
+      console.error('Error fetching team products:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch team products' });
+    }
+  });
+  
+  // Update team products (updates product assignments for all roles)
+  app.put(`${apiPrefix}/team-products`, async (req, res) => {
+    try {
+      const { productIds } = req.body;
+      
+      if (!Array.isArray(productIds)) {
+        return res.status(400).json({ message: 'productIds must be an array' });
+      }
+      
+      // Check if all products exist
+      for (const productId of productIds) {
+        const product = await storage.getProductById(productId);
+        if (!product) {
+          return res.status(404).json({ message: `Product with ID ${productId} not found` });
+        }
+      }
+      
+      // Update all roles with the same product list
+      await storage.updateTeamProducts(productIds);
+      
+      // Return the updated products
+      const updatedProducts = await storage.getTeamProducts();
+      res.json(updatedProducts);
+    } catch (error: any) {
+      console.error('Error updating team products:', error);
+      res.status(500).json({ message: error.message || 'Failed to update team products' });
+    }
+  });
 
   // Get product by ID
   app.get(`${apiPrefix}/products/:id`, async (req, res) => {

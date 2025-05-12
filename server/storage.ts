@@ -196,6 +196,37 @@ export const storage = {
       );
   },
 
+  // Get all products that are assigned to at least one role
+  getTeamProducts: async (): Promise<Product[]> => {
+    // Get distinct products across all roles
+    const assignedProducts = await db
+      .select({ productId: roleProducts.productId })
+      .from(roleProducts)
+      .groupBy(roleProducts.productId);
+    
+    const productIds = assignedProducts.map(p => p.productId);
+    
+    if (productIds.length === 0) {
+      return [];
+    }
+    
+    // Fetch the products with these IDs
+    return await db.query.products.findMany({
+      where: inArray(products.id, productIds)
+    });
+  },
+  
+  // Update product assignments for all roles
+  updateTeamProducts: async (productIds: string[]): Promise<void> => {
+    // Get all roles
+    const allRoles = await db.query.roles.findMany();
+    
+    // For each role, update the product assignments to match the provided list
+    for (const role of allRoles) {
+      await storage.updateProductRoleAssignments(role.id, productIds);
+    }
+  },
+  
   getProductsWithRoleAssignments: async (): Promise<Product[]> => {
     // First get all products
     const allProducts = await storage.getAllProducts();
