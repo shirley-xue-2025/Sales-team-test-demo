@@ -114,13 +114,7 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       // Saving product selection to backend
       
       // Send the update to the backend
-      await apiRequest(`/api/roles/${roleId}/products`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ productIds })
-      });
+      await apiRequest('PUT', `/api/roles/${roleId}/products`, { productIds });
       
       // Update the selected status of the product in the products array
       const updatedProducts = products.map(p => 
@@ -179,10 +173,9 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     try {
       set({ isLoadingProducts: true });
       
-      // Fetching products from API
-      const products = await apiRequest<Product[]>('/api/products', {
-        method: 'GET'
-      });
+      // Fetching products from API with updated apiRequest format
+      const response = await apiRequest('GET', '/api/products');
+      const products = await response.json() as Product[];
       
       if (!products || products.length === 0) {
         console.warn('No products returned from API');
@@ -211,9 +204,8 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       // Fetch products for each role
       for (const role of roles) {
         try {
-          const roleProducts = await apiRequest<Product[]>(`/api/roles/${role.id}/products`, {
-            method: 'GET'
-          });
+          const response = await apiRequest('GET', `/api/roles/${role.id}/products`);
+          const roleProducts = await response.json() as Product[];
           
           if (roleProducts && roleProducts.length > 0) {
             roleMap[role.id] = roleProducts.map((p: Product) => p.id);
@@ -245,13 +237,12 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   fetchRoleProducts: async (roleId) => {
     try {
-      const roleProducts = await apiRequest<Product[]>(`/api/roles/${roleId}/products`, {
-        method: 'GET'
-      });
+      const response = await apiRequest('GET', `/api/roles/${roleId}/products`);
+      const roleProducts = await response.json() as Product[];
       
       // Processing products for this role
       
-      if (!roleProducts) {
+      if (!roleProducts || roleProducts.length === 0) {
         console.warn(`No products returned for role ${roleId}`);
         return [];
       }
@@ -302,15 +293,10 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     try {
       set({ isUpdatingProducts: true });
       // Send update to backend - ensure this completes successfully
-      const updatedProducts = await apiRequest('/api/roles/' + roleId + '/products', {
-        method: 'PUT', 
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ productIds })
-      });
+      const response = await apiRequest('PUT', `/api/roles/${roleId}/products`, { productIds });
+      const updatedProducts = await response.json() as Product[];
       
-      if (!updatedProducts) {
+      if (!updatedProducts || updatedProducts.length === 0) {
         throw new Error(`Failed to update products for role ${roleId}`);
       }
       
