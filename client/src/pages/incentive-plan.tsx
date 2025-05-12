@@ -74,7 +74,13 @@ const IncentivePlanPage: React.FC = () => {
     const fetchProductsData = async () => {
       try {
         console.log('Fetching initial products data from server');
-        // This waits for the product data to be fully loaded before rendering
+        
+        // Phase 2 change: Fetch team-wide products first (new approach)
+        console.log('Fetching team-wide product data');
+        await useIncentiveStore.getState().fetchTeamProducts();
+        
+        // Then fetch individual role products for backward compatibility
+        console.log('Fetching individual role products for additional data');
         await useIncentiveStore.getState().fetchProducts();
         
         // Force a UI refresh
@@ -140,23 +146,16 @@ const IncentivePlanPage: React.FC = () => {
   // Simple event handlers
   const handleEditClick = () => setIsEditMode(prev => !prev);
   
+  // Updated to use team-wide product selection (Phase 2)
   const handleProductSelectionChange = async (productIds: string[]) => {
     try {
-      console.log('Product selection change handler called with:', productIds);
+      console.log('Team-wide product selection change handler called with:', productIds);
       
-      // If no roles are selected, we can't assign products
-      if (selectedRoles.length === 0) {
-        console.warn('No roles selected, cannot assign products');
-        return;
-      }
+      // Update products for the entire team at once
+      console.log('Updating products for all roles with:', productIds);
       
-      // Update all selected roles with the new product selection
-      for (const roleId of selectedRoles) {
-        console.log(`Updating products for role ${roleId} with:`, productIds);
-        
-        // Use the store's updateRoleProducts method to save to backend
-        await useIncentiveStore.getState().updateRoleProducts(roleId, productIds);
-      }
+      // Use the store's updateTeamProducts method to save to backend
+      await useIncentiveStore.getState().updateTeamProducts(productIds);
       
       // Set edit mode if adding new products
       if (!isEditMode) {
@@ -166,7 +165,7 @@ const IncentivePlanPage: React.FC = () => {
       // Refresh the products data to ensure UI is in sync with backend
       await useIncentiveStore.getState().fetchProducts();
       
-      console.log('Product selection updated successfully');
+      console.log('Team-wide product selection updated successfully');
     } catch (error) {
       console.error('Failed to update product selection:', error);
     }
