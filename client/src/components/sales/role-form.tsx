@@ -31,7 +31,6 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
   isDefault: z.boolean().default(false),
 });
 
@@ -59,9 +58,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
   const defaultValues = React.useMemo<FormValues>(() => ({
     title: initialData?.title || '',
     description: initialData?.description || '',
-    permissions: Array.isArray(initialData?.permissions) 
-      ? initialData.permissions as string[] 
-      : ['edit', 'view'], // Default permissions
     isDefault: typeof initialData?.isDefault === 'boolean' ? initialData.isDefault : false,
   }), [initialData]);
   
@@ -125,11 +121,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
     };
   }, [debounceTimeout]);
   
-  const availablePermissions = [
-    { id: 'admin', label: 'Administrator (Full access)' },
-    { id: 'edit', label: 'Edit (Can modify but not delete)' },
-    { id: 'view', label: 'View (Read-only access)' },
-  ];
+  // Permissions system has been removed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -225,35 +217,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
               )}
             />
             
-            {/* Hidden permissions field to satisfy validation */}
-            <div className="hidden">
-              {availablePermissions.map((permission) => (
-                <FormField
-                  key={permission.id}
-                  control={form.control}
-                  name="permissions"
-                  render={({ field }) => {
-                    return (
-                      <FormItem className="hidden">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value.includes(permission.id)}
-                            onChange={() => {
-                              // Use the field.value directly in a copy
-                              const updatedValue = [...field.value];
-                              if (!updatedValue.includes(permission.id)) {
-                                updatedValue.push(permission.id);
-                                field.onChange(updatedValue);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )
-                  }}
-                />
-              ))}
-            </div>
+            {/* Permissions system has been removed */}
             
             <DialogFooter className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-100">
               <DialogClose asChild>

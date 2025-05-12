@@ -8,7 +8,7 @@ export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  permissions: jsonb("permissions").notNull().default([]),
+  permissions: jsonb("permissions").default([]), // Made optional, keeping the field to avoid breaking changes
   isDefault: jsonb("is_default").notNull().default(false),
 });
 
@@ -57,7 +57,7 @@ export const roleInsertSchema = createInsertSchema(roles);
 export const roleValidationSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  permissions: z.array(z.string()).min(1, "At least one permission must be selected"),
+  permissions: z.array(z.string()).optional().default([]), // Made optional
   isDefault: z.boolean().optional().default(false),
 });
 
