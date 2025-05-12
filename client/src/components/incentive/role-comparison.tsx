@@ -3,6 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Role, Product, CombinedIncentive } from '@/lib/types';
+import { useIncentiveStore } from '@/lib/incentiveStore';
 import ProductSelectionModal from './product-selection-modal';
 
 interface RoleComparisonProps {
@@ -186,26 +187,40 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   // Create an array of roles to show in the header
   const displayRoles = roles.filter(role => selectedRoles.includes(role.id));
   
+  // Get user mode from store
+  const userMode = useIncentiveStore(state => state.userMode);
+  const currentMember = useIncentiveStore(state => state.getCurrentMember());
+  
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-lg font-medium text-gray-800">Team incentive overview</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-medium text-gray-800">Team incentive overview</h2>
+          
+          {userMode === 'sales' && currentMember && (
+            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+              Sales Member View
+            </span>
+          )}
+        </div>
         
         <div className="flex space-x-2">
-          <Button 
-            onClick={handleOpenProductSelection}
-            variant="outline"
-            className="rounded-sm border-gray-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-            </svg>
-            Change products
-          </Button>
+          {userMode === 'seller' && (
+            <Button 
+              onClick={handleOpenProductSelection}
+              variant="outline"
+              className="rounded-sm border-gray-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+              </svg>
+              Change products
+            </Button>
+          )}
           
-          {onEditClick && (
+          {onEditClick && userMode === 'seller' && (
             <Button 
               onClick={onEditClick}
               className={`${isEditMode ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-gray-800'} rounded-sm text-white px-4`}
@@ -233,26 +248,37 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
         </div>
       </div>
       
-      {/* Role selection section */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Simulate Team Collaboration Scenarios</h3>
-        <p className="text-xs text-gray-600 mb-3">
-          Select different combinations of roles to see how commissions and bonuses would be distributed when team members collaborate on the same deal.
-          For example, you can check what happens when a Setter and Closer work together versus a Setter and Senior Closer.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {roles.map(role => (
-            <label key={role.id} className="flex items-center space-x-2">
-              <Checkbox 
-                checked={selectedRoles.includes(role.id)} 
-                onCheckedChange={() => onRoleSelectionChange(role.id)}
-                className="rounded-sm"
-              />
-              <span className="text-sm font-medium text-gray-700">{role.title}</span>
-            </label>
-          ))}
+      {/* Role selection section - only visible in seller mode */}
+      {userMode === 'seller' ? (
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Simulate Team Collaboration Scenarios</h3>
+          <p className="text-xs text-gray-600 mb-3">
+            Select different combinations of roles to see how commissions and bonuses would be distributed when team members collaborate on the same deal.
+            For example, you can check what happens when a Setter and Closer work together versus a Setter and Senior Closer.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {roles.map(role => (
+              <label key={role.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={selectedRoles.includes(role.id)} 
+                  onCheckedChange={() => onRoleSelectionChange(role.id)}
+                  className="rounded-sm"
+                />
+                <span className="text-sm font-medium text-gray-700">{role.title}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        // For sales member mode, show a message about what they're seeing
+        <div className="p-4 border-b border-gray-200 bg-blue-50">
+          <h3 className="text-sm font-medium text-blue-700 mb-2">Your Role Products</h3>
+          <p className="text-xs text-blue-600 mb-3">
+            You're viewing products assigned to your role. These are the only products you are authorized to sell.
+            Contact your sales manager if you need access to additional products.
+          </p>
+        </div>
+      )}
       
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
