@@ -28,18 +28,23 @@ const ProductRow = React.memo(({
   isSelected: boolean; 
   onToggle: (productId: string, selected: boolean) => void;
 }) => {
-  // Removed excessive logging
+  // Add debugging
+  console.log(`Rendering ProductRow for ${product.id}, isSelected:`, isSelected);
 
   const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
     // Prevent click handling if the click was on or inside the checkbox itself
     const target = e.target as HTMLElement;
+    
+    // Improved detection of checkbox-related elements
     const isCheckboxOrChild = 
       target.tagName.toLowerCase() === 'button' || 
       target.closest('[role="checkbox"]') !== null ||
+      target.closest('input[type="checkbox"]') !== null ||
       target.tagName.toLowerCase() === 'svg' || 
       target.tagName.toLowerCase() === 'path';
       
     if (!isCheckboxOrChild) {
+      console.log(`Row clicked for ${product.id}, toggling from ${isSelected} to ${!isSelected}`);
       // Toggle the selection directly through the parent handler
       onToggle(product.id, !isSelected);
     }
@@ -47,28 +52,26 @@ const ProductRow = React.memo(({
 
   const handleCheckboxChange = useCallback((checked: boolean | 'indeterminate') => {
     // Simple direct conversion from checkbox state to boolean
-    const finalChecked = checked === 'indeterminate' ? false : !!checked;
+    const finalChecked = checked === true; // Only true if explicitly checked
     
-    // If isSelected is true and we're toggling, pass false
-    // If isSelected is false and we're toggling, pass true
-    // this ensures we always toggle the actual state
+    console.log(`Checkbox changed for ${product.id} to ${finalChecked}`);
     onToggle(product.id, finalChecked);
   }, [product.id, onToggle]);
 
   return (
     <tr 
-      key={product.id} 
-      className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
+      className={`hover:bg-gray-50 bg-white even:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
       onClick={handleRowClick}
     >
       <td className="p-3">
-        <Checkbox
-          id={`product-${product.id}`}
-          name={`product-${product.id}`}
-          checked={isSelected}
-          onCheckedChange={handleCheckboxChange}
-          className="rounded-sm"
-        />
+        <div onClick={(e) => e.stopPropagation()} className="inline-block">
+          <Checkbox
+            id={`product-checkbox-${product.id}`}
+            checked={isSelected}
+            onCheckedChange={handleCheckboxChange}
+            className="rounded-sm"
+          />
+        </div>
       </td>
       <td className="p-3 text-sm text-gray-600">{product.id}</td>
       <td className="p-3">
@@ -289,6 +292,9 @@ export default function ProductSelectionModal({
 
   // Calculate the selection count
   const selectionCount = localSelectedIds.length;
+  
+  // Debug the current product selections
+  console.log('Current localSelectedIds:', localSelectedIds);
   
   // Generate page numbers for display
   const paginationItems = generatePagination();
