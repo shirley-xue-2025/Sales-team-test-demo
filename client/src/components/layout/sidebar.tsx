@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useMobile } from '@/hooks/use-mobile';
 import { useIncentiveStore } from '@/lib/incentiveStore';
-import { AccountSwitcher } from '@/components/account-switcher';
+import { Role } from '@/lib/types';
 
 const Sidebar: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();
   const [location] = useLocation();
-  const { userMode } = useIncentiveStore();
+  const { 
+    userMode, 
+    currentSalesRoleId,
+    roles
+  } = useIncentiveStore();
 
   // Check if we're in sales member section or viewing as a sales member
   const isSalesMember = location.startsWith('/sales-member') || userMode === 'sales';
@@ -210,11 +214,49 @@ const Sidebar: React.FC = () => {
           {/* Navigation links - conditionally rendered based on section */}
           {renderMenu()}
 
-          {/* User profile and account switcher */}
+          {/* User profile section */}
           <div className="mt-auto">
+            {/* Show current user - either admin or sales member */}
             <div className="border-t border-gray-800 p-4">
-              <AccountSwitcher />
+              {userMode === 'sales' ? (
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium mr-2">
+                    MG
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Muhammad Gunes</div>
+                    <div className="text-xs text-green-500">
+                      {roles.find((r: Role) => r.id === currentSalesRoleId)?.title || 'Sales Member'}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white font-medium mr-2">
+                    SA
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Sales Team Admin</div>
+                    <div className="text-xs text-blue-500">Admin Account</div>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Account switch button */}
+            <div className="px-4 pt-2 pb-4 border-t border-gray-800">
+              <button 
+                onClick={() => useIncentiveStore.getState().switchToMember(userMode === 'seller' ? 1 : null)}
+                className="w-full px-3 py-2 text-xs font-medium bg-gray-700 hover:bg-gray-600 text-white rounded flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                {userMode === 'seller' ? 'Sales Team Member Account' : 'Sales Team Admin Account'}
+              </button>
+            </div>
+            
             <div className="p-4 text-xs text-gray-500 border-t border-gray-800">
               <div>© ablefy 2025</div>
             </div>
