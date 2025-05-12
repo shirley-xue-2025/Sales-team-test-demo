@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Product, Role, RoleIncentive, CombinedIncentive } from './types';
+import { Product, Role, RoleIncentive, CombinedIncentive, Member } from './types';
 import { apiRequest } from './queryClient';
 
 // Type for user mode/context
@@ -10,9 +10,11 @@ interface IncentiveStore {
   products: Product[];
   roles: Role[];
   roleIncentives: RoleIncentive[];
+  members: Member[];
+  currentMemberId: number | null;
   mode: 'view' | 'edit';
   selectedRoles: number[];
-  userMode: UserMode; // New field to track if user is seller or sales member
+  userMode: UserMode; // Field to track if user is seller or sales member
   currentSalesRoleId: number | null; // When in sales mode, this tracks the current role
   
   // Loading states
@@ -33,6 +35,14 @@ interface IncentiveStore {
   setUserMode: (mode: UserMode) => void;
   setCurrentSalesRole: (roleId: number | null) => void;
   
+  // Member management
+  setMembers: (members: Member[]) => void;
+  addMember: (member: Member) => void;
+  updateMember: (id: number, updates: Partial<Member>) => void;
+  removeMember: (id: number) => void;
+  switchToMember: (id: number | null) => void;
+  getCurrentMember: () => Member | null;
+  
   // Data fetching
   fetchProducts: () => Promise<void>;
   fetchRoleProducts: (roleId: number) => Promise<Product[]>;
@@ -51,6 +61,16 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   products: [],
   roles: [],
   roleIncentives: [],
+  members: [
+    {
+      id: 1,
+      name: "Muhammad Gunes",
+      email: "muhammad.gunes@example.com",
+      roleId: 25, // Default to the first role initially
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Muhammad"
+    }
+  ],
+  currentMemberId: null,
   mode: 'view',
   selectedRoles: [],
   userMode: 'seller', // Default mode is seller

@@ -37,3 +37,11 @@ export interface CombinedIncentive {
   combinedCommission: string;
   combinedBonus: string;
 }
+
+export interface Member {
+  id: number;
+  name: string;
+  email: string;
+  roleId: number;
+  avatarUrl?: string;
+}
