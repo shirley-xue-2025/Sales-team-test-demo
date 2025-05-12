@@ -48,6 +48,10 @@ interface IncentiveStore {
   fetchRoleProducts: (roleId: number) => Promise<Product[]>;
   updateRoleProducts: (roleId: number, productIds: string[]) => Promise<Product[]>;
   
+  // Team-wide product management (Phase 2 addition)
+  fetchTeamProducts: () => Promise<Product[]>;
+  updateTeamProducts: (productIds: string[]) => Promise<Product[]>;
+  
   // Selectors
   getSelectedProductsForRole: (roleId: number) => Product[];
   getAllProducts: () => Product[];
@@ -434,6 +438,94 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
       
       // Return empty array instead of throwing
       return [];
+    }
+  },
+  
+  // Team-wide product management methods (Phase 2 addition)
+  fetchTeamProducts: async () => {
+    try {
+      set({ isLoadingProducts: true });
+      
+      // Fetch team products from the new endpoint
+      const response = await apiRequest('GET', '/api/team-products');
+      const teamProducts = await response.json() as Product[];
+      
+      if (!teamProducts || teamProducts.length === 0) {
+        console.warn('No team products returned from API');
+        set({ isLoadingProducts: false });
+        return [];
+      }
+      
+      // Get all products to update their selected status
+      const { products } = get();
+      
+      // Update product selection status based on team products
+      const teamProductIds = teamProducts.map(p => p.id);
+      const updatedProducts = products.map(product => ({
+        ...product,
+        selected: teamProductIds.includes(product.id)
+      }));
+      
+      set({ products: updatedProducts });
+      
+      // Update roleIncentives for all roles to include these products
+      const { roles } = get();
+      const updatedRoleIncentives = roles.map(role => ({
+        roleId: role.id,
+        productIds: [...teamProductIds] // Same products for all roles
+      }));
+      
+      set({ roleIncentives: updatedRoleIncentives });
+      
+      return teamProducts;
+    } catch (error) {
+      console.error('Error fetching team products:', error);
+      return [];
+    } finally {
+      set({ isLoadingProducts: false });
+    }
+  },
+  
+  updateTeamProducts: async (productIds) => {
+    try {
+      set({ isUpdatingProducts: true });
+      
+      // Send update to backend with team-wide product selection
+      const response = await apiRequest('PUT', '/api/team-products', {
+        body: JSON.stringify({ productIds })
+      });
+      
+      const updatedTeamProducts = await response.json() as Product[];
+      
+      if (!updatedTeamProducts || updatedTeamProducts.length === 0) {
+        console.warn('Warning: No products returned after team update');
+      }
+      
+      // Update all roleIncentives to have the same products
+      const { roles, products } = get();
+      const updatedRoleIncentives = roles.map(role => ({
+        roleId: role.id,
+        productIds: [...productIds] // Same products for all roles
+      }));
+      
+      // Update products with selected status
+      const updatedProducts = products.map(product => ({
+        ...product,
+        selected: productIds.includes(product.id)
+      }));
+      
+      // Update store
+      set({ 
+        roleIncentives: updatedRoleIncentives,
+        products: updatedProducts
+      });
+      
+      return updatedTeamProducts;
+    } catch (error) {
+      console.error('Error updating team products:', error);
+      throw error;
+    } finally {
+      set({ isUpdatingProducts: false });
     }
   },
 
