@@ -76,7 +76,32 @@ export default function MembersPage() {
 
   const handleSendInvitation = () => {
     // In a real app, this would send an API request
-    console.log('Sending invitation to:', inviteEmail, 'with role:', selectedRoleId);
+    // If no role is selected, find the default role
+    let roleIdToUse = selectedRoleId;
+    
+    if (!roleIdToUse || roleIdToUse === '') {
+      const defaultRole = roles.find(role => role.isDefault === true);
+      if (defaultRole) {
+        roleIdToUse = defaultRole.id.toString();
+      } else if (roles.length > 0) {
+        // If no default role, use the first available role
+        roleIdToUse = roles[0].id.toString();
+      }
+    }
+    
+    console.log('Sending invitation to:', inviteEmail, 'with role:', roleIdToUse);
+    
+    // In a real app, this would add the invitation to the list with the selected or default role
+    if (inviteEmail && roleIdToUse) {
+      setInvitations(prev => [
+        ...prev,
+        {
+          email: inviteEmail,
+          roleId: parseInt(roleIdToUse),
+          sentAt: new Date().toISOString()
+        }
+      ]);
+    }
     
     // Close modal and reset form
     setInviteModalOpen(false);
