@@ -176,6 +176,8 @@ const IncentivePlanPage: React.FC = () => {
   // Debug logs for troubleshooting
   console.log('Selected Roles:', selectedRoles);
   console.log('All Products:', allProducts);
+  console.log('Products from API:', apiProducts);
+  console.log('Products Count:', allProducts?.length || 0);
   console.log('Combined Incentives:', incentives);
   
   // Render the static component with data

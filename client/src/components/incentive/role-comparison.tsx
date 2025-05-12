@@ -114,6 +114,13 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   const handleOpenProductSelection = () => {
     // Store the current relevant product IDs so we can use them in the modal
     setDisplayedProductIds(relevantProductIds);
+    
+    // Debug logging
+    console.log('Opening product selection modal with:');
+    console.log('- Products:', products);
+    console.log('- Products count:', products.length);
+    console.log('- Selected product IDs:', displayedProductIds);
+    
     setIsProductSelectionOpen(true);
   };
   

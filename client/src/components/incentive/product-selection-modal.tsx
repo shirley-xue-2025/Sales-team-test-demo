@@ -127,13 +127,16 @@ export default function ProductSelectionModal({
   useEffect(() => {
     if (open) {
       console.log('[ProductSelectionModal] Modal opened, resetting state with selectedProductIds:', selectedProductIds);
+      console.log('[ProductSelectionModal] Products received:', products);
+      console.log('[ProductSelectionModal] Products count:', products.length);
+      
       // Create a new array to avoid reference issues and increment the key to force remounting
       setLocalSelectedIds([...selectedProductIds]);
       setLocalStateKey(prev => prev + 1);
       setCurrentPage(1);
       setSearchQuery('');
     }
-  }, [open, selectedProductIds]);
+  }, [open, selectedProductIds, products]);
   
   // Filtered products based on search query
   const filteredProducts = products.filter(product => 
@@ -149,6 +152,10 @@ export default function ProductSelectionModal({
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+  
+  // Debug logging for current products
+  console.log('[ProductSelectionModal] Filtered products:', filteredProducts.length);
+  console.log('[ProductSelectionModal] Current page products:', currentProducts.length);
   
   // Generate pagination array
   const generatePagination = useCallback((): number[] => {
