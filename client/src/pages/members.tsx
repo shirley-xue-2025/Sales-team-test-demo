@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Role } from '@/lib/types';
-import { RoleInsert } from '@shared/schema';
+import { Role as ClientRole } from '@/lib/types';
+import { Role, RoleInsert } from '@shared/schema';
 import { Settings, MoreVertical } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -419,7 +419,8 @@ export default function MembersPage() {
                           onClick={() => {
                             if (roles.length > 1) {
                               // Set role to delete and open dialog
-                              setRoleToDelete(role);
+                              // Cast the role to the schema Role type
+                              setRoleToDelete(role as unknown as Role);
                               setDeleteRoleDialogOpen(true);
                             }
                           }}

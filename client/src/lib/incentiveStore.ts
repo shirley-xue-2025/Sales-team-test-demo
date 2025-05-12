@@ -56,6 +56,28 @@ interface IncentiveStore {
   calculateCombinedIncentives: () => CombinedIncentive[];
 }
 
+// Helper function to get roles from localStorage
+const getStoredRoles = (): number[] => {
+  try {
+    const storedRoles = localStorage.getItem('selectedRoles');
+    return storedRoles ? JSON.parse(storedRoles) : [];
+  } catch (error) {
+    console.error('Error parsing stored roles:', error);
+    return [];
+  }
+};
+
+// Helper function to get current sales role from localStorage
+const getStoredSalesRole = (): number | null => {
+  try {
+    const storedRoleId = localStorage.getItem('currentSalesRoleId');
+    return storedRoleId ? parseInt(storedRoleId) : null;
+  } catch (error) {
+    console.error('Error parsing stored sales role:', error);
+    return null;
+  }
+};
+
 export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   // Data
   products: [],
@@ -72,9 +94,9 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   ],
   currentMemberId: null,
   mode: 'view',
-  selectedRoles: [],
+  selectedRoles: getStoredRoles(), // Initialize from localStorage
   userMode: 'seller', // Default mode is seller
-  currentSalesRoleId: null,
+  currentSalesRoleId: getStoredSalesRole(), // Initialize from localStorage
   
   // Loading states
   isLoadingProducts: false,
@@ -162,11 +184,21 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
     const { selectedRoles } = get();
     const isSelected = selectedRoles.includes(roleId);
     
+    let updatedRoles: number[];
     if (isSelected) {
-      set({ selectedRoles: selectedRoles.filter(id => id !== roleId) });
+      updatedRoles = selectedRoles.filter(id => id !== roleId);
     } else {
-      set({ selectedRoles: [...selectedRoles, roleId] });
+      updatedRoles = [...selectedRoles, roleId];
     }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('selectedRoles', JSON.stringify(updatedRoles));
+    } catch (error) {
+      console.error('Error saving selected roles to localStorage:', error);
+    }
+    
+    set({ selectedRoles: updatedRoles });
   },
   
   addRole: (role) => {
@@ -186,7 +218,25 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   
   setUserMode: (userMode) => set({ userMode }),
   
-  setCurrentSalesRole: (roleId) => set({ currentSalesRoleId: roleId }),
+  setCurrentSalesRole: (roleId) => {
+    // Save to localStorage if not null
+    if (roleId !== null) {
+      try {
+        localStorage.setItem('currentSalesRoleId', roleId.toString());
+      } catch (error) {
+        console.error('Error saving current sales role to localStorage:', error);
+      }
+    } else {
+      // Remove from localStorage if null
+      try {
+        localStorage.removeItem('currentSalesRoleId');
+      } catch (error) {
+        console.error('Error removing current sales role from localStorage:', error);
+      }
+    }
+    
+    set({ currentSalesRoleId: roleId });
+  },
 
   // Data fetching
   fetchProducts: async () => {
