@@ -14,8 +14,8 @@ const Sidebar: React.FC = () => {
     roles
   } = useIncentiveStore();
 
-  // Check if we're in sales member section or viewing as a sales member
-  const isSalesMember = location.startsWith('/sales-member') || userMode === 'sales';
+  // Check if we're in sales member section (only based on route)
+  const isSalesMemberRoute = location.startsWith('/sales-member');
 
   useEffect(() => {
     // Close sidebar on mobile when route changes
@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
 
   // Determine which menu to render based on section
   const renderMenu = () => {
-    if (isSalesMember) {
+    if (isSalesMemberRoute) {
       return (
         <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
           <div className="mb-1">
