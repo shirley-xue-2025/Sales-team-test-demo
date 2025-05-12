@@ -498,5 +498,69 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
         combinedBonus
       };
     }).filter(Boolean) as CombinedIncentive[];
+  },
+  
+  // Member management functions
+  setMembers: (members) => {
+    set({ members });
+  },
+  
+  addMember: (member) => {
+    set(state => ({
+      members: [...state.members, member]
+    }));
+  },
+  
+  updateMember: (id, updates) => {
+    set(state => {
+      const memberIndex = state.members.findIndex(m => m.id === id);
+      if (memberIndex === -1) return state;
+      
+      const updatedMembers = [...state.members];
+      updatedMembers[memberIndex] = {
+        ...updatedMembers[memberIndex],
+        ...updates
+      };
+      
+      return { members: updatedMembers };
+    });
+  },
+  
+  removeMember: (id) => {
+    set(state => ({
+      members: state.members.filter(m => m.id !== id)
+    }));
+  },
+  
+  switchToMember: (id) => {
+    // If null, switch back to seller mode
+    if (id === null) {
+      set({ 
+        currentMemberId: null,
+        userMode: 'seller',
+        currentSalesRoleId: null
+      });
+      return;
+    }
+    
+    // Set current member and switch to sales mode
+    set(state => {
+      const member = state.members.find(m => m.id === id);
+      
+      // If member not found, don't change anything
+      if (!member) return state;
+      
+      return {
+        currentMemberId: id,
+        userMode: 'sales',
+        currentSalesRoleId: member.roleId
+      };
+    });
+  },
+  
+  getCurrentMember: () => {
+    const { members, currentMemberId } = get();
+    if (currentMemberId === null) return null;
+    return members.find(m => m.id === currentMemberId) || null;
   }
 }));

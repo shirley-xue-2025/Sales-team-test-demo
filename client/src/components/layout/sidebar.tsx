@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useMobile } from '@/hooks/use-mobile';
+import { useIncentiveStore } from '@/lib/incentiveStore';
+import { AccountSwitcher } from '@/components/account-switcher';
 
 const Sidebar: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();
   const [location] = useLocation();
+  const { userMode } = useIncentiveStore();
 
-  // Check if we're in sales member section
-  const isSalesMember = location.startsWith('/sales-member');
+  // Check if we're in sales member section or viewing as a sales member
+  const isSalesMember = location.startsWith('/sales-member') || userMode === 'sales';
 
   useEffect(() => {
     // Close sidebar on mobile when route changes
@@ -207,25 +210,15 @@ const Sidebar: React.FC = () => {
           {/* Navigation links - conditionally rendered based on section */}
           {renderMenu()}
 
-          {/* User profile and role - only for sales member section */}
-          {isSalesMember && (
-            <div className="mt-auto">
-              <div className="border-t border-gray-800 p-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium mr-2">
-                    MG
-                  </div>
-                  <div>
-                    <div className="text-sm text-white">Muhammad Gunes</div>
-                    <div className="text-xs text-green-500">Closer</div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 text-xs text-gray-500 border-t border-gray-800">
-                <div>© ablefy 2025</div>
-              </div>
+          {/* User profile and account switcher */}
+          <div className="mt-auto">
+            <div className="border-t border-gray-800 p-4">
+              <AccountSwitcher />
             </div>
-          )}
+            <div className="p-4 text-xs text-gray-500 border-t border-gray-800">
+              <div>© ablefy 2025</div>
+            </div>
+          </div>
         </div>
       </aside>
 

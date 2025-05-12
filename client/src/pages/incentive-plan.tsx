@@ -64,7 +64,10 @@ const IncentivePlanPage: React.FC = () => {
   const setRoles = useIncentiveStore(state => state.setRoles);
   const products = useIncentiveStore(state => state.products);
   const getAllProducts = useIncentiveStore(state => state.getAllProducts);
+  const getAvailableProductsForSalesMember = useIncentiveStore(state => state.getAvailableProductsForSalesMember);
   const calculateCombinedIncentives = useIncentiveStore(state => state.calculateCombinedIncentives);
+  const userMode = useIncentiveStore(state => state.userMode);
+  const currentSalesRoleId = useIncentiveStore(state => state.currentSalesRoleId);
   
   // Fetch products when component mounts and on page refresh
   useEffect(() => {
@@ -170,27 +173,44 @@ const IncentivePlanPage: React.FC = () => {
   };
   
   // Prepare data for the static component
-  const allProducts = getAllProducts();
+  // Different product list based on user mode (seller vs sales member)
+  const productsToShow = userMode === 'sales' 
+    ? getAvailableProductsForSalesMember() 
+    : getAllProducts();
+  
+  // In sales member mode, only show the current role
+  const rolesToShow = userMode === 'sales' && currentSalesRoleId
+    ? roles.filter(r => r.id === currentSalesRoleId)
+    : roles;
+    
+  // Pre-select the current sales role if in sales member mode
+  useEffect(() => {
+    if (userMode === 'sales' && currentSalesRoleId && selectedRoles.length === 0) {
+      toggleRoleSelection(currentSalesRoleId);
+    }
+  }, [userMode, currentSalesRoleId, selectedRoles.length, toggleRoleSelection]);
+  
   const incentives = calculateCombinedIncentives();
   
   // Debug logs for troubleshooting
+  console.log('User Mode:', userMode);
+  console.log('Current Sales Role ID:', currentSalesRoleId);
   console.log('Selected Roles:', selectedRoles);
-  console.log('All Products:', allProducts);
-  console.log('Products from API:', apiProducts);
-  console.log('Products Count:', allProducts?.length || 0);
+  console.log('Products to Show:', productsToShow);
+  console.log('Products Count:', productsToShow?.length || 0);
   console.log('Combined Incentives:', incentives);
   
   // Render the static component with data
   return (
     <IncentivePlanContent
-      roles={roles}
-      products={allProducts}
+      roles={rolesToShow}
+      products={productsToShow}
       selectedRoles={selectedRoles}
       combinedIncentives={incentives}
-      isEditMode={isEditMode}
-      onEditClick={handleEditClick}
-      onRoleSelectionChange={toggleRoleSelection}
-      onProductSelectionChange={handleProductSelectionChange}
+      isEditMode={isEditMode && userMode === 'seller'} // Only allow edit mode for sellers
+      onEditClick={userMode === 'seller' ? handleEditClick : () => {}}
+      onRoleSelectionChange={userMode === 'seller' ? toggleRoleSelection : () => {}}
+      onProductSelectionChange={userMode === 'seller' ? handleProductSelectionChange : () => {}}
     />
   );
 };
