@@ -113,39 +113,61 @@ const RoleComparison: React.FC<RoleComparisonProps> = ({
   // When opening the product selection modal, update displayedProductIds
   const handleOpenProductSelection = () => {
     // Store the current relevant product IDs so we can use them in the modal
-    setDisplayedProductIds(relevantProductIds);
+    // Force refresh the displayed product IDs to match the current state
+    const currentRelevantIds = [...relevantProductIds];
+    console.log('Setting displayed product IDs to:', currentRelevantIds);
+    setDisplayedProductIds(currentRelevantIds);
     
     // Debug logging
     console.log('Opening product selection modal with:');
     console.log('- Products:', products);
     console.log('- Products count:', products.length);
-    console.log('- Selected product IDs:', displayedProductIds);
+    console.log('- All available products:', products.map(p => p.id).join(', '));
+    console.log('- Selected product IDs:', currentRelevantIds);
     
-    setIsProductSelectionOpen(true);
+    // Set a small timeout to ensure state is updated before modal opens
+    setTimeout(() => {
+      setIsProductSelectionOpen(true);
+    }, 50);
   };
   
   // Handle product selection
   const handleProductSelection = async (selectedProductIds: string[]) => {
+    console.log(`handleProductSelection called with ${selectedProductIds.length} products:`, selectedProductIds);
+    
     if (onProductSelectionChange) {
       try {
+        // Set displayed product IDs immediately to show the user's selection
+        setDisplayedProductIds(selectedProductIds);
+        
         console.log('Product selection changed to:', selectedProductIds);
         console.log('Previous relevant products:', relevantProductIds);
         
         // Identify newly added products
         const newlyAdded = selectedProductIds.filter(id => !relevantProductIds.includes(id));
+        console.log('Newly added products:', newlyAdded);
         setNewlyAddedProductIds(newlyAdded);
 
         // Notify parent component about the selection, which will update store and save to backend
+        console.log('Calling onProductSelectionChange with:', selectedProductIds);
         await onProductSelectionChange(selectedProductIds);
         
-        // After applying changes, close the modal to avoid confusion
-        setIsProductSelectionOpen(false);
-        
-        console.log('Product selection saved successfully');
+        // Wait a moment to ensure state has updated
+        setTimeout(() => {
+          // After applying changes, close the modal to avoid confusion
+          setIsProductSelectionOpen(false);
+          console.log('Product selection saved successfully, modal closed');
+        }, 100);
       } catch (error) {
         console.error('Failed to save product selection:', error);
+        
+        // Revert to previous selection in case of error
+        setDisplayedProductIds(relevantProductIds);
+        
         // You could add a toast notification here to inform the user of the error
       }
+    } else {
+      console.warn('No onProductSelectionChange handler provided');
     }
   };
   

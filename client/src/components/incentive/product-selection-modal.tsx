@@ -261,18 +261,35 @@ export default function ProductSelectionModal({
 
   // Handle save button click
   const handleSave = useCallback(() => {
+    console.log('Save button clicked');
+    console.log('Current local selections:', localSelectedIds);
+    console.log('Original selected product IDs:', selectedProductIds);
+    
     // Check if any products are being removed
     const productsBeingRemoved = selectedProductIds.filter(id => !localSelectedIds.includes(id))
       .map(id => products.find(p => p.id === id))
       .filter(Boolean) as Product[];
     
+    console.log('Products being removed:', productsBeingRemoved);
+    
     if (productsBeingRemoved.length > 0) {
+      console.log('Showing warning for product removal');
       setProductsToRemove(productsBeingRemoved);
       setShowWarning(true);
     } else {
       // No removals, commit changes directly
-      onSelectProducts(localSelectedIds);
-      onOpenChange(false);
+      console.log('No products being removed, applying changes directly');
+      
+      // Make a copy of the array to ensure it's a new reference
+      const productIdsToSave = [...localSelectedIds];
+      console.log('Saving product IDs:', productIdsToSave);
+      
+      onSelectProducts(productIdsToSave);
+      
+      // Close the modal after a short delay to ensure the state is updated
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 50);
     }
   }, [localSelectedIds, selectedProductIds, products, onSelectProducts, onOpenChange]);
 
@@ -285,10 +302,21 @@ export default function ProductSelectionModal({
 
   // Handle confirm removal in warning dialog
   const handleConfirmRemoval = useCallback(() => {
+    console.log('User confirmed product removal');
+    
     // User confirmed, proceed with changes
-    onSelectProducts(localSelectedIds);
+    // Make a copy of the array to ensure it's a new reference
+    const productIdsToSave = [...localSelectedIds];
+    console.log('Applying confirmed selections:', productIdsToSave);
+    
+    onSelectProducts(productIdsToSave);
     setShowWarning(false);
-    onOpenChange(false);
+    
+    // Close the modal after a short delay to ensure the state is updated
+    setTimeout(() => {
+      onOpenChange(false);
+      console.log('Modal closed after product removal confirmed');
+    }, 50);
   }, [localSelectedIds, onSelectProducts, onOpenChange]);
 
   // Handle cancel removal in warning dialog
