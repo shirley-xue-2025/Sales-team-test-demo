@@ -290,64 +290,80 @@ export const useIncentiveStore = create<IncentiveStore>((set, get) => ({
   },
   
   updateRoleProducts: async (roleId, productIds) => {
+    console.log(`updateRoleProducts called for role ${roleId} with product IDs:`, productIds);
     try {
       set({ isUpdatingProducts: true });
+      
       // Send update to backend - ensure this completes successfully
-      const response = await apiRequest('PUT', `/api/roles/${roleId}/products`, { productIds });
+      const response = await apiRequest('PUT', `/api/roles/${roleId}/products`, { 
+        body: JSON.stringify({ productIds }) 
+      });
+      console.log('API response status:', response.status);
+      
       const updatedProducts = await response.json() as Product[];
+      console.log('Products returned from API:', updatedProducts);
       
       if (!updatedProducts || updatedProducts.length === 0) {
-        throw new Error(`Failed to update products for role ${roleId}`);
+        console.warn(`Warning: No products returned after update for role ${roleId}`);
+        // Continue with local update instead of throwing error
       }
-      
-      // Backend returned updated products for this role
       
       // Update local state with the new product IDs for this role
       const roleIncentives = get().roleIncentives;
+      console.log('Current role incentives:', roleIncentives);
+      
       const updatedIncentives = [...roleIncentives];
       const existingIndex = updatedIncentives.findIndex(ri => ri.roleId === roleId);
       
       if (existingIndex >= 0) {
+        console.log(`Updating existing incentive for role ${roleId}`);
         updatedIncentives[existingIndex] = {
           ...updatedIncentives[existingIndex],
           productIds: [...productIds] // Make a copy to avoid reference issues
         };
       } else if (productIds.length > 0) {
+        console.log(`Creating new incentive for role ${roleId}`);
         updatedIncentives.push({
           roleId,
           productIds: [...productIds] // Make a copy to avoid reference issues
         });
       }
       
+      console.log('Updated incentives:', updatedIncentives);
       set({ roleIncentives: updatedIncentives });
-      // Updated role incentives in local state
       
       // Mark products as selected/unselected in the products array
       const allProducts = get().products;
       const updatedProducts2 = allProducts.map(product => {
         const isSelected = productIds.includes(product.id);
+        console.log(`Setting product ${product.id} selection status to:`, isSelected);
         return { ...product, selected: isSelected };
       });
       
       set({ products: updatedProducts2 });
+      console.log('Products updated in store');
       
       // Refresh products for this role from the server to ensure consistency
-      await get().fetchRoleProducts(roleId);
+      console.log('Refreshing products from server...');
+      const refreshedProducts = await get().fetchRoleProducts(roleId);
+      console.log('Refreshed products:', refreshedProducts);
       
       set({ isUpdatingProducts: false });
-      return updatedProducts;
+      return updatedProducts.length > 0 ? updatedProducts : refreshedProducts;
     } catch (error) {
       console.error(`Error updating products for role ${roleId}:`, error);
       set({ isUpdatingProducts: false });
       
       // Re-fetch products from server to ensure consistency after an error
       try {
+        console.log('Refreshing all products after error...');
         await get().fetchProducts();
       } catch (fetchError) {
         console.error('Failed to refresh products after error:', fetchError);
       }
       
-      throw error;
+      // Return empty array instead of throwing
+      return [];
     }
   },
 

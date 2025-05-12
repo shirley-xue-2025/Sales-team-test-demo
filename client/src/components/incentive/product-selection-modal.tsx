@@ -193,30 +193,44 @@ export default function ProductSelectionModal({
 
   // Handle checkbox change - Only affects local state, not database
   const handleProductToggle = useCallback((productId: string, checked: boolean) => {
+    console.log(`handleProductToggle called for product ${productId}, setting to ${checked}`);
+    
     // Simplified toggle logic - create brand new array each time to ensure state updates
     setLocalSelectedIds(prevSelections => {
       // Get current selection state
       const isCurrentlySelected = prevSelections.includes(productId);
+      console.log(`Product ${productId} isCurrentlySelected:`, isCurrentlySelected, 'desired state:', checked);
       
       // If value is already in the desired state, don't change
       if ((isCurrentlySelected && checked) || (!isCurrentlySelected && !checked)) {
+        console.log(`Product ${productId} is already in desired state, no change needed`);
         // Make a copy to ensure reference changes for React
         return [...prevSelections]; 
       }
       
+      let result;
       // Create a brand new array to ensure React detects the state change
       if (checked) {
         // Add the ID (selection)
-        return [...prevSelections, productId];
+        result = [...prevSelections, productId];
+        console.log(`Added product ${productId} to selections:`, result);
       } else {
         // Remove the ID (deselection)
-        return prevSelections.filter(id => id !== productId);
+        result = prevSelections.filter(id => id !== productId);
+        console.log(`Removed product ${productId} from selections:`, result);
       }
+      
+      return result;
     });
     
     // Force an update to localStateKey to ensure child components re-render
     setLocalStateKey(prev => prev + 1);
-  }, []);
+    
+    // Log the selection after state update
+    setTimeout(() => {
+      console.log('Selection after toggle:', localSelectedIds);
+    }, 0);
+  }, [localSelectedIds]);
 
   // Handle select/deselect all on current page
   const handleSelectAllChange = useCallback((checked: boolean | 'indeterminate') => {
