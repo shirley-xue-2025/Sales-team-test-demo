@@ -73,8 +73,13 @@ const RoleForm: React.FC<RoleFormProps> = ({
     }
   }, [open, form, defaultValues]);
 
+  // Add empty permissions array to make it compatible with the existing RoleInsert type
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit(data);
+    const roleData: RoleInsert = {
+      ...data,
+      permissions: [] // Add empty permissions array
+    };
+    onSubmit(roleData);
     form.reset();
   };
   
@@ -120,8 +125,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
       }
     };
   }, [debounceTimeout]);
-  
-  // Permissions system has been removed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -216,8 +219,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
                 </FormItem>
               )}
             />
-            
-            {/* Permissions system has been removed */}
             
             <DialogFooter className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-100">
               <DialogClose asChild>

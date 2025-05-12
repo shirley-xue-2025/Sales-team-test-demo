@@ -18,23 +18,7 @@ interface RoleCardProps {
   totalRoles: number;
 }
 
-const PermissionBadge = ({ permission }: { permission: string }) => {
-  let className = '';
-  
-  if (permission === 'admin') {
-    className = 'bg-red-100 text-red-800';
-  } else if (permission === 'edit') {
-    className = 'bg-green-100 text-green-800';
-  } else if (permission === 'view') {
-    className = 'bg-blue-100 text-blue-800';
-  }
-  
-  return (
-    <Badge variant="outline" className={`px-2 py-1 text-xs font-medium rounded-sm ${className}`}>
-      {permission}
-    </Badge>
-  );
-};
+// Permissions system has been removed
 
 const RoleCard = ({ 
   role, 
@@ -143,18 +127,6 @@ const RoleCard = ({
       
       {/* Footer section - always at bottom */}
       <div className="mt-auto">
-        {/* Permissions area */}
-        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
-          <h5 className="text-xs font-medium text-gray-500 mb-2">Permissions</h5>
-          <div className="flex flex-wrap gap-2">
-            {Array.isArray(role.permissions) ? 
-              (role.permissions as string[]).map((permission: string) => (
-                <PermissionBadge key={permission} permission={permission} />
-              )) 
-            : null}
-          </div>
-        </div>
-        
         {/* Members count - moved to the bottom */}
         <div className="border-t border-gray-200 px-5 py-3 bg-gray-50">
           <button

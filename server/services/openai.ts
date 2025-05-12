@@ -135,60 +135,11 @@ export async function getTeamStructureRecommendations(
   }
 }
 
+// Permissions system has been removed
 export async function generateRolePermissions(
   roleName: string,
   roleDescription: string
 ): Promise<string[]> {
-  // Default permissions if OpenAI is not available
-  if (!openaiEnabled || !openai) {
-    // Different default permissions based on role name
-    const roleLower = roleName.toLowerCase();
-    if (roleLower.includes('manager') || roleLower.includes('director') || roleLower.includes('head')) {
-      return ["view", "edit", "admin", "approve", "create"];
-    } else if (roleLower.includes('executive') || roleLower.includes('lead')) {
-      return ["view", "edit", "create", "approve"];
-    } else {
-      return ["view", "create"];
-    }
-  }
-  
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are a sales organization expert that helps define appropriate permissions for sales team roles."
-        },
-        {
-          role: "user",
-          content: `Based on this sales role, suggest appropriate system permissions:
-          
-          Role Title: ${roleName}
-          Role Description: ${roleDescription}
-          
-          Choose from these possible permissions: view, edit, admin, approve, create, delete, export
-          Return only the relevant permissions as a JSON array of strings.`
-        }
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 150,
-      temperature: 0.3,
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content) {
-      return ["view"];
-    }
-
-    const parsed = JSON.parse(content);
-    if (!parsed.permissions || !Array.isArray(parsed.permissions)) {
-      return ["view"];
-    }
-
-    return parsed.permissions as string[];
-  } catch (error) {
-    console.error("Error generating role permissions:", error);
-    return ["view"];
-  }
+  // Always return an empty array as permissions are no longer used
+  return [];
 }
