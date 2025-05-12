@@ -7,12 +7,27 @@ import {
 } from "@shared/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
+// Helper function to ensure proper type conversion for Role objects
+const convertToRoleType = (roleData: any): Role | undefined => {
+  if (!roleData) return undefined;
+  
+  return {
+    id: roleData.id,
+    title: roleData.title,
+    description: roleData.description,
+    permissions: roleData.permissions || [],
+    isDefault: !!roleData.isDefault,
+    memberCount: roleData.memberCount
+  };
+};
+
 export const storage = {
   // Roles
   getAllRoles: async (): Promise<Role[]> => {
-    return await db.query.roles.findMany({
+    const rawRoles = await db.query.roles.findMany({
       orderBy: roles.id,
     });
+    return rawRoles.map(role => convertToRoleType(role));
   },
   
   getRoleCount: async (): Promise<number> => {
@@ -24,7 +39,7 @@ export const storage = {
     const result = await db.query.roles.findFirst({
       where: eq(roles.id, id),
     });
-    return result;
+    return convertToRoleType(result);
   },
   
   createRole: async (data: RoleInsert): Promise<Role> => {
@@ -42,7 +57,7 @@ export const storage = {
       isDefault: shouldBeDefault
     }).returning();
     
-    return role;
+    return convertToRoleType(role) as Role;
   },
   
   updateRole: async (id: number, data: RoleInsert): Promise<Role> => {
