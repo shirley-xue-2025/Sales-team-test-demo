@@ -377,11 +377,14 @@ export default function ProductSelectionModal({
           {/* Content scrollable area */}
           <div className="p-6 pt-0 flex-1 overflow-auto">
             {/* Debug info for development */}
-            {products.length === 0 && (
-              <div className="mb-4 p-4 bg-yellow-50 text-yellow-800 rounded-md">
-                <strong>Debug info:</strong> No products available in the props.
-              </div>
-            )}
+            <div className="mb-4 p-4 bg-yellow-50 text-yellow-800 rounded-md">
+              <strong>Debug info:</strong> {products.length === 0 ? 
+                "No products available in the props." : 
+                `Found ${products.length} products in the props.`
+              }
+              <br/>
+              <strong>Products:</strong> {products.map(p => p.id).join(', ')}
+            </div>
             
             {/* State debug display */}
             <div className="mb-4 p-2 bg-blue-50 text-blue-800 rounded-md">
@@ -412,6 +415,8 @@ export default function ProductSelectionModal({
                   {products.length > 0 && currentProducts.map((product) => {
                     // Explicitly check if this product ID is in selected IDs
                     const isSelected = localSelectedIds.includes(product.id);
+                    
+                    console.log('Rendering product row:', product.id, product.name);
                     
                     // Render individual product row with memoization for performance
                     return (

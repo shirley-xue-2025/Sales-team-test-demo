@@ -5,8 +5,12 @@ async function seed() {
   try {
     console.log("Seeding database...");
     
+    // First delete the role_products to avoid foreign key constraints
+    console.log("Clearing existing role-product assignments...");
+    await db.delete(roleProducts);
+    
     // ROLES
-    console.log("Clearing existing roles for Version A...");
+    console.log("Clearing existing roles...");
     await db.delete(roles);
     
     console.log("Adding Closer role for Version A...");
@@ -44,6 +48,7 @@ async function seed() {
     // PRODUCTS
     console.log("Seeding products...");
     // Clear existing products
+    console.log("Clearing existing products...");
     await db.delete(products);
     
     // Add products
